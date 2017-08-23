@@ -3,7 +3,7 @@
         "ssh_name": "packer",
         "ssh_pass": "packer",
         "hostname": "packer",
-        "GITHUB_AUTH_TOKEN": "<your-github-auth-token>"
+        "GITHUB_AUTH_TOKEN": "{{env `GITHUB_AUTH_TOKEN`}}"
     },
 
     "builders": [{
@@ -55,6 +55,7 @@
     {
         "type": "shell",
         "execute_command" : "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
+        "environment_vars": "GITHUB_AUTH_TOKEN={{user `GITHUB_AUTH_TOKEN`}}",
         "script": "scripts/bootstrap.sh",
         "pause_before": "10s"
     }]

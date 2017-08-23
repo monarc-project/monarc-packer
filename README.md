@@ -7,6 +7,7 @@
 
 ## Usage
 
+    $ export GITHUB_AUTH_TOKEN=<your-github-auth-token>
     $ packer build monarc.json
 
 A VirtualBox image will be generated.
