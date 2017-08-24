@@ -3,12 +3,15 @@
         "ssh_name": "packer",
         "ssh_pass": "packer",
         "hostname": "packer",
+        "vm_name": "Monarc_demo",
         "GITHUB_AUTH_TOKEN": "{{env `GITHUB_AUTH_TOKEN`}}"
     },
 
     "builders": [{
         "type": "virtualbox-iso",
         "guest_os_type": "Ubuntu_64",
+        "format": "ova",
+        "vm_name": "{{user `vm_name`}}",
 
         "vboxmanage": [
             ["modifyvm", "{{.Name}}", "--vram", "32"]
