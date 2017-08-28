@@ -15,13 +15,6 @@ A VirtualBox image will be generated and stored in the folder
 
 ### Automatic export to GitHub
 
-- create a new release: https://developer.github.com/v3/repos/releases/#create-a-release
-- upload a release asset: https://developer.github.com/v3/repos/releases/#upload-a-release-asset
-
-Example of a binary upload with curl (from the GitHub blog):
-
-    curl -H "Authorization: token <yours>" \
-     -H "Accept: application/vnd.github.manifold-preview" \
-     -H "Content-Type: application/zip" \
-     --data-binary @build/mac/package.zip \
-     "https://uploads.github.com/repos/hubot/singularity/releases/123/assets?name=1.0.0-mac.zip"
+    $ GITHUB_AUTH_TOKEN=<your-github-auth-token>
+    $ TAG=$(curl https://api.github.com/repos/monarc-project/MonarcAppFO/releases/latest | jq  -r '.tag_name')
+    $ ./upload.sh github_api_token=$GITHUB_AUTH_TOKEN owner=monarc-project repo=MonarcAppFO tag=$TAG filename=./output-virtualbox-iso/MONARC_demo.ova

@@ -7,7 +7,7 @@ BRANCH='master'
 #TAG='v0.1'
 TAG=''
 
-PATH_TO_MONARC='/home/packer/monarc'
+PATH_TO_MONARC='/var/lib/monarc/fo'
 
 APPENV='local'
 ENVIRONMENT='PRODUCTION'
@@ -29,46 +29,49 @@ PHP_INI=/etc/php/7.0/apache2/php.ini
 
 
 
-echo -e "\n--- Installing MONARC FO... ---\n"
+echo "\n--- Installing MONARC FO... ---\n"
 
-echo -e "\n--- Updating packages list ---\n"
+echo "\n--- Updating packages list ---\n"
 sudo apt-get -qq update
 
-echo -e "\n--- Install base packages ---\n"
+echo "\n--- Install base packages ---\n"
 sudo apt-get -y install vim zip unzip git gettext curl net-tools  > /dev/null 2>&1
 
-echo -e "\n--- Install MariaDB (a MySQL fork/alternative) specific packages and settings ---\n"
+echo "\n--- Install MariaDB (a MySQL fork/alternative) specific packages and settings ---\n"
 echo "mysql-server mysql-server/root_password password $DBPASSWORD_AMIN" | debconf-set-selections
 echo "mysql-server mysql-server/root_password_again password $DBPASSWORD_AMIN" | debconf-set-selections
 sudo apt-get -y install mariadb-server mariadb-client > /dev/null 2>&1
 
-echo -e "\n--- Installing PHP-specific packages ---\n"
+echo "\n--- Installing PHP-specific packages ---\n"
 sudo apt-get -y install php apache2 libapache2-mod-php php-curl php-gd php-mcrypt php-mysql php-pear php-apcu php-xml php-mbstring php-intl php-imagick php-zip > /dev/null 2>&1
 
-echo -e "\n--- Configuring PHP ---\n"
+echo "\n--- Configuring PHP ---\n"
 for key in upload_max_filesize post_max_size max_execution_time max_input_time memory_limit
 do
  sudo sed -i "s/^\($key\).*/\1 = $(eval echo \${$key})/" $PHP_INI
 done
 
-echo -e "\n--- Enabling mod-rewrite and ssl ---\n"
+echo "\n--- Enabling mod-rewrite and ssl ---\n"
 sudo a2enmod rewrite > /dev/null 2>&1
 sudo a2enmod ssl > /dev/null 2>&1
 
-echo -e "\n--- Allowing Apache override to all ---\n"
+echo "\n--- Allowing Apache override to all ---\n"
 sudo sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
 
-#echo -e "\n--- We want to see the PHP errors, turning them on ---\n"
+#echo "\n--- We want to see the PHP errors, turning them on ---\n"
 #sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/7.0/apache2/php.ini
 #sed -i "s/display_errors = .*/display_errors = On/" /etc/php/7.0/apache2/php.ini
 
-echo -e "\n--- Setting up our MySQL user for MONARC ---\n"
+echo "\n--- Setting up our MySQL user for MONARC ---\n"
 sudo mysql -u root -p$DBPASSWORD_AMIN -e "CREATE USER '$DBUSER_MONARC'@'localhost' IDENTIFIED BY '$DBPASSWORD_MONARC';"
 sudo mysql -u root -p$DBPASSWORD_AMIN -e "GRANT ALL PRIVILEGES ON * . * TO '$DBUSER_MONARC'@'localhost';"
 sudo mysql -u root -p$DBPASSWORD_AMIN -e "FLUSH PRIVILEGES;"
 
-echo -e "\n--- Retrieving MONARC... ---\n"
-git clone --config core.filemode=false -b $BRANCH $MonarcAppFO_Git_Repo $PATH_TO_MONARC
+echo "\n--- Retrieving MONARC... ---\n"
+mkdir -p $PATH_TO_MONARC
+sudo chown www-data:www-data $PATH_TO_MONARC
+cd $PATH_TO_MONARC
+sudo -u www-data git clone --config core.filemode=false -b $BRANCH $MonarcAppFO_Git_Repo $PATH_TO_MONARC
 if [ $? -ne 0 ]; then
     echo "\nERROR: unable to clone the MOMARC repository\n"
     exit 1;
@@ -78,38 +81,37 @@ if [ "$TAG" != '' ]; then
     # Checkout the latest tag
     cd $PATH_TO_MONARC
     #latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-    git checkout $TAG
+    sudo -u www-data git checkout $TAG
     cd ..
 fi
 
-echo -e "\n--- Installing composer... ---\n"
-cd $PATH_TO_MONARC
+echo "\n--- Installing composer... ---\n"
 curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer > /dev/null 2>&1
 if [ $? -ne 0 ]; then
     echo "\nERROR: unable to install composer\n"
     exit 1;
 fi
 sudo composer self-update
-composer config -g github-oauth.github.com $GITHUB_AUTH_TOKEN
-composer install -o
+sudo -u www-data composer config github-oauth.github.com $GITHUB_AUTH_TOKEN
+sudo -u www-data composer install -o
 
-echo -e "\n--- Retrieving MONARC libraries... ---\n"
+echo "\n--- Retrieving MONARC libraries... ---\n"
 # Modules
-mkdir module
+sudo -u www-data mkdir module
 cd module
-ln -s ./../vendor/monarc/core MonarcCore;
-ln -s ./../vendor/monarc/frontoffice MonarcFO;
+sudo -u www-data ln -s ./../vendor/monarc/core MonarcCore;
+sudo -u www-data ln -s ./../vendor/monarc/frontoffice MonarcFO;
 cd ..
 
 # Interfaces
-mkdir node_modules
+sudo -u www-data mkdir node_modules
 cd node_modules
-git clone --config core.filemode=false https://github.com/monarc-project/ng-client.git ng_client > /dev/null 2>&1
+sudo -u www-data git clone --config core.filemode=false https://github.com/monarc-project/ng-client.git ng_client > /dev/null 2>&1
 if [ $? -ne 0 ]; then
     echo "\nERROR: unable to clone the ng-client repository\n"
     exit 1;
 fi
-git clone --config core.filemode=false https://github.com/monarc-project/ng-anr.git ng_anr > /dev/null 2>&1
+sudo -u www-data git clone --config core.filemode=false https://github.com/monarc-project/ng-anr.git ng_anr > /dev/null 2>&1
 if [ $? -ne 0 ]; then
     echo "\nERROR: unable to clone the ng-anr repository\n"
     exit 1;
@@ -117,7 +119,7 @@ fi
 cd ..
 
 
-echo -e "\n--- Add a VirtualHost for MONARC ---\n"
+echo "\n--- Add a VirtualHost for MONARC ---\n"
 sudo cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
 <VirtualHost *:80>
     ServerName localhost
@@ -136,12 +138,12 @@ sudo cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
     SetEnv DB_PASS $DBPASSWORD_MONARC
 </VirtualHost>
 EOF
-echo -e "\n--- Restarting Apache ---\n"
+echo "\n--- Restarting Apache ---\n"
 sudo service apache2 restart > /dev/null 2>&1
 
 
-echo -e "\n--- Configuration of MONARC data base connection ---\n"
-sudo cat > config/autoload/local.php <<EOF
+echo "\n--- Configuration of MONARC data base connection ---\n"
+sudo -u www-data cat > config/autoload/local.php <<EOF
 <?php
 return array(
     'doctrine' => array(
@@ -196,32 +198,36 @@ sudo chgrp -R www-data $PATH_TO_MONARC
 sudo chmod -R 700 $PATH_TO_MONARC
 
 
-echo -e "\n--- Creation of the data bases---\n"
+echo "\n--- Creation of the data bases---\n"
 mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC -e "CREATE DATABASE monarc_cli DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;" > /dev/null 2>&1
 mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC -e "CREATE DATABASE monarc_common DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;" > /dev/null 2>&1
-echo -e "\n--- Populating MONARC DB ---\n"
-#gunzip -k db-bootstrap/monarc-common.sql.gz
-sudo tar -xzvf db-bootstrap/monarc-common.tar.gz -C db-bootstrap/ > /dev/null
-sudo mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc-common.sql > /dev/null
+echo "\n--- Populating MONARC DB ---\n"
+sudo -u www-data tar -xzvf db-bootstrap/monarc-common.tar.gz -C db-bootstrap/ > /dev/null
+sudo -u www-data mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc-common.sql > /dev/null
 
 
-echo -e "\n--- Installation of Grunt ---\n"
+echo "\n--- Installation of Grunt ---\n"
 sudo apt-get -y install nodejs > /dev/null 2>&1
 sudo apt-get -y install npm > /dev/null 2>&1
 sudo npm install -g grunt-cli > /dev/null 2>&1
 sudo ln -s /usr/bin/nodejs /usr/bin/node
 
 
-echo -e "\n--- Update the project ---\n"
+echo "\n--- Update the project ---\n"
 sudo /bin/bash ./scripts/update-all.sh
 
 
-echo -e "\n--- Create initial user and client ---\n"
-sudo php ./vendor/robmorgan/phinx/bin/phinx seed:run -c ./module/MonarcFO/migrations/phinx.php
+echo "\n--- Create initial user and client ---\n"
+sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx seed:run -c ./module/MonarcFO/migrations/phinx.php
 
 
-echo -e "\n--- Restarting Apache ---\n"
+echo "\n--- Restarting Apache ---\n"
 sudo service apache2 restart > /dev/null 2>&1
 
 
-echo -e "\n--- MONARC is ready! ---\n"
+echo "\n--- MONARC is ready! ---\n"
+echo "Login and passwords for the MONARC image are the following:"
+echo "MONARC application: admin@admin.test:admin"
+echo "SSH login: monarc:password"
+echo "Mysql root login: $DBUSER_AMIN:$DBPASSWORD_AMIN"
+echo "Mysql MONARC login: $DBUSER_MONARC:$DBPASSWORD_MONARC"

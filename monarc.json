@@ -1,9 +1,9 @@
 {
     "variables": {
-        "ssh_name": "packer",
-        "ssh_pass": "packer",
-        "hostname": "packer",
-        "vm_name": "Monarc_demo",
+        "ssh_name": "monarc",
+        "ssh_pass": "password",
+        "hostname": "monarc",
+        "vm_name": "MONARC_demo",
         "GITHUB_AUTH_TOKEN": "{{env `GITHUB_AUTH_TOKEN`}}"
     },
 
@@ -57,7 +57,6 @@
     },
     {
         "type": "shell",
-        "execute_command" : "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
         "environment_vars": "GITHUB_AUTH_TOKEN={{user `GITHUB_AUTH_TOKEN`}}",
         "script": "scripts/bootstrap.sh",
         "pause_before": "10s"
