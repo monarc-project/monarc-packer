@@ -59,6 +59,7 @@
     {
         "type": "shell",
         "environment_vars": "GITHUB_AUTH_TOKEN={{user `GITHUB_AUTH_TOKEN`}}",
+        "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
         "script": "scripts/bootstrap.sh",
         "pause_before": "10s"
     }],
