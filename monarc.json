@@ -4,7 +4,8 @@
         "ssh_pass": "password",
         "hostname": "monarc",
         "vm_name": "MONARC_demo",
-        "GITHUB_AUTH_TOKEN": "{{env `GITHUB_AUTH_TOKEN`}}"
+        "GITHUB_AUTH_TOKEN": "{{env `GITHUB_AUTH_TOKEN`}}",
+        "disk_size": "10000"
     },
 
     "builders": [{
@@ -17,7 +18,7 @@
             ["modifyvm", "{{.Name}}", "--vram", "32"]
         ],
 
-        "disk_size" : 10000,
+        "disk_size": "{{user `disk_size`}}",
 
         "iso_url": "http://releases.ubuntu.com/17.04/ubuntu-17.04-server-amd64.iso",
         "iso_checksum": "ca5d9a8438e2434b9a3ac2be67b5c5fa2c1f8e3e40b954519462935195464034",
@@ -60,5 +61,10 @@
         "environment_vars": "GITHUB_AUTH_TOKEN={{user `GITHUB_AUTH_TOKEN`}}",
         "script": "scripts/bootstrap.sh",
         "pause_before": "10s"
+    }],
+
+    "post-processors":[{
+        "type": "checksum",
+        "checksum_types": ["sha1", "sha512"]
     }]
 }
