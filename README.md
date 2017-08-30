@@ -26,5 +26,5 @@ The sha1 and sha512 checksums of the generated VM will be stored in the files
     $ TAG=$(curl https://api.github.com/repos/monarc-project/MonarcAppFO/releases/latest | jq  -r '.tag_name')
     $ ./upload.sh github_api_token=$GITHUB_AUTH_TOKEN owner=monarc-project repo=MonarcAppFO tag=$TAG filename=./output-virtualbox-iso/MONARC_demo.ova
 
-    You can add these lines in the *post-processors* section of the file
-    *misp.json* if you want to automate the process.
+You can add these lines in the *post-processors* section of the file *monarc.json*
+if you want to automate the process.
