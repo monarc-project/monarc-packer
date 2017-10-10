@@ -118,7 +118,7 @@ cd ..
 
 
 echo "--- Add a VirtualHost for MONARC ---"
-sudo cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
+sudo bash -c "cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
 <VirtualHost *:80>
     ServerName localhost
     DocumentRoot $PATH_TO_MONARC/public
@@ -131,7 +131,7 @@ sudo cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
 
     SetEnv APPLICATION_ENV $ENVIRONMENT
 </VirtualHost>
-EOF
+EOF"
 echo "--- Restarting Apache ---"
 sudo systemctl restart apache2.service > /dev/null 2>&1
 
