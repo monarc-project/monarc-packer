@@ -36,7 +36,7 @@ sudo apt-get -qq update
 echo "--- Install base packages ---"
 sudo apt-get -y install vim zip unzip git gettext curl net-tools  > /dev/null 2>&1
 
-echo "--- Install MariaDB (a MySQL fork/alternative) specific packages and settings ---"
+echo "--- Install MariaDB specific packages and settings ---"
 echo "mysql-server mysql-server/root_password password $DBPASSWORD_AMIN" | sudo debconf-set-selections
 echo "mysql-server mysql-server/root_password_again password $DBPASSWORD_AMIN" | sudo debconf-set-selections
 sudo apt-get -y install mariadb-server mariadb-client > /dev/null 2>&1
@@ -68,8 +68,8 @@ sudo mysql -u root -p$DBPASSWORD_AMIN -e "FLUSH PRIVILEGES;"
 
 echo "--- Retrieving MONARC... ---"
 sudo mkdir -p $PATH_TO_MONARC
-sudo chown www-data:www-data $PATH_TO_MONARC
-sudo -u www-data git clone --config core.filemode=false -b $BRANCH $MonarcAppFO_Git_Repo $PATH_TO_MONARC
+sudo chown monarc:monarc $PATH_TO_MONARC
+sudo -u monarc git clone --config core.filemode=false -b $BRANCH $MonarcAppFO_Git_Repo $PATH_TO_MONARC
 if [ $? -ne 0 ]; then
     echo "ERROR: unable to clone the MOMARC repository"
     exit 1;
@@ -79,7 +79,7 @@ if [ "$TAG" != '' ]; then
     # Checkout the latest tag
     cd $PATH_TO_MONARC
     #latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-    sudo -u www-data git checkout $TAG
+    git checkout $TAG
     cd ..
 fi
 
@@ -90,26 +90,26 @@ if [ $? -ne 0 ]; then
     exit 1;
 fi
 sudo composer self-update
-sudo -u www-data composer config github-oauth.github.com $GITHUB_AUTH_TOKEN
-sudo -u www-data composer install -o
+sudo -u monarc composer config github-oauth.github.com $GITHUB_AUTH_TOKEN
+sudo -u monarc composer install -o
 
 echo "--- Retrieving MONARC libraries... ---"
 # Modules
-sudo -u www-data mkdir module
+sudo -u monarc mkdir module
 cd module
-sudo -u www-data ln -s ./../vendor/monarc/core MonarcCore;
-sudo -u www-data ln -s ./../vendor/monarc/frontoffice MonarcFO;
+sudo -u monarc ln -s ./../vendor/monarc/core MonarcCore
+sudo -u monarc ln -s ./../vendor/monarc/frontoffice MonarcFO
 cd ..
 
 # Interfaces
-sudo -u www-data mkdir node_modules
+sudo -u monarc mkdir node_modules
 cd node_modules
-sudo -u www-data git clone --config core.filemode=false https://github.com/monarc-project/ng-client.git ng_client > /dev/null 2>&1
+sudo -u monarc git clone --config core.filemode=false https://github.com/monarc-project/ng-client.git ng_client > /dev/null 2>&1
 if [ $? -ne 0 ]; then
     echo "ERROR: unable to clone the ng-client repository"
     exit 1;
 fi
-sudo -u www-data git clone --config core.filemode=false https://github.com/monarc-project/ng-anr.git ng_anr > /dev/null 2>&1
+sudo -u monarc git clone --config core.filemode=false https://github.com/monarc-project/ng-anr.git ng_anr > /dev/null 2>&1
 if [ $? -ne 0 ]; then
     echo "ERROR: unable to clone the ng-anr repository"
     exit 1;
@@ -130,18 +130,14 @@ sudo cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
     </Directory>
 
     SetEnv APPLICATION_ENV $ENVIRONMENT
-    SetEnv APP_ENV $APPENV
-    SetEnv DB_HOST $DBHOST
-    SetEnv DB_USER $DBUSER_MONARC
-    SetEnv DB_PASS $DBPASSWORD_MONARC
 </VirtualHost>
 EOF
 echo "--- Restarting Apache ---"
-sudo service apache2 restart > /dev/null 2>&1
+sudo systemctl restart apache2.service > /dev/null 2>&1
 
 
 echo "--- Configuration of MONARC data base connection ---"
-sudo -u www-data cat > config/autoload/local.php <<EOF
+sudo -u monarc cat > config/autoload/local.php <<EOF
 <?php
 return array(
     'doctrine' => array(
@@ -195,17 +191,18 @@ return array(
 EOF
 
 
-sudo chown -R www-data $PATH_TO_MONARC
-sudo chgrp -R www-data $PATH_TO_MONARC
-sudo chmod -R 700 $PATH_TO_MONARC
+# sudo chown -R www-data $PATH_TO_MONARC
+# sudo chgrp -R www-data $PATH_TO_MONARC
+# sudo chmod -R 700 $PATH_TO_MONARC
+sudo chown -R www-data $PATH_TO_MONARC/data
 
 
 echo "--- Creation of the data bases ---"
 mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC -e "CREATE DATABASE monarc_cli DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;" > /dev/null 2>&1
 mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC -e "CREATE DATABASE monarc_common DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;" > /dev/null 2>&1
 echo "--- Populating MONARC DB ---"
-sudo -u www-data tar -xzvf db-bootstrap/monarc-common.tar.gz -C db-bootstrap/ > /dev/null
-sudo -u www-data mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc-common.sql > /dev/null
+sudo -u monarc tar -xzvf db-bootstrap/monarc-common.tar.gz -C db-bootstrap/ > /dev/null
+sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc-common.sql > /dev/null
 
 
 echo "--- Installation of Grunt ---"
@@ -216,7 +213,7 @@ sudo ln -s /usr/bin/nodejs /usr/bin/node
 
 
 echo "--- Update the project ---"
-sudo /bin/bash ./scripts/update-all.sh
+sudo -u monarc ./scripts/update-all.sh
 
 
 echo "--- Create initial user and client ---"
@@ -224,7 +221,7 @@ sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx seed:run -c ./module/Mon
 
 
 echo "--- Restarting Apache ---"
-sudo service apache2 restart > /dev/null 2>&1
+sudo systemctl restart apache2.service > /dev/null 2>&1
 
 
 echo "--- MONARC is ready! ---"
