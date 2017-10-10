@@ -179,13 +179,17 @@ return array(
             'index' => 3,
             'label' => 'Deutsch'
         ),
+        'ne' => array(
+            'index' => 4,
+            'label' => 'Nederlands'
+        ),
     ]
     */
-    'activeLanguages' => array('fr','en','de',),
+    'activeLanguages' => array('fr','en','de','ne'),
 
     'monarc' => array(
         'ttl' => 20, // timeout
-        'salt' => '', // salt privé pour chiffrement pwd
+        'salt' => '', // salt for the password
     ),
 );
 EOF
