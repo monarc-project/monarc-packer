@@ -34,7 +34,7 @@ echo "--- Updating packages list ---"
 sudo apt-get -qq update
 
 echo "--- Install base packages ---"
-sudo apt-get -y install vim zip unzip git gettext curl net-tools  > /dev/null 2>&1
+sudo apt-get -y install vim zip unzip git gettext curl net-tools gsfonts  > /dev/null 2>&1
 
 echo "--- Install MariaDB specific packages and settings ---"
 echo "mysql-server mysql-server/root_password password $DBPASSWORD_AMIN" | sudo debconf-set-selections
