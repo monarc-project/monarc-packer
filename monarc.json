@@ -15,7 +15,9 @@
         "vm_name": "{{user `vm_name`}}",
 
         "vboxmanage": [
-            ["modifyvm", "{{.Name}}", "--vram", "32"]
+            ["modifyvm", "{{.Name}}", "--vram", "64"],
+            ["modifyvm", "{{.Name}}", "--memory", "1024"],
+            ["modifyvm", "{{.Name}}", "--cpus", "2"]
         ],
 
         "disk_size": "{{user `disk_size`}}",
