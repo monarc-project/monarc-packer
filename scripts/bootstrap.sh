@@ -191,9 +191,6 @@ return array(
 EOF
 
 
-# sudo chown -R www-data $PATH_TO_MONARC
-# sudo chgrp -R www-data $PATH_TO_MONARC
-# sudo chmod -R 700 $PATH_TO_MONARC
 sudo chown -R www-data $PATH_TO_MONARC/data
 
 
@@ -201,8 +198,8 @@ echo "--- Creation of the data bases ---"
 mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC -e "CREATE DATABASE monarc_cli DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;" > /dev/null 2>&1
 mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC -e "CREATE DATABASE monarc_common DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;" > /dev/null 2>&1
 echo "--- Populating MONARC DB ---"
-sudo -u monarc tar -xzvf db-bootstrap/monarc-common.tar.gz -C db-bootstrap/ > /dev/null
-sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc-common.sql > /dev/null
+sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc_structure.sql > /dev/null
+sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc_data.sql > /dev/null
 
 
 echo "--- Installation of Grunt ---"
