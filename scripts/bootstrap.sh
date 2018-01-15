@@ -15,8 +15,8 @@ ENVIRONMENT='PRODUCTION'
 DBHOST='localhost'
 DBNAME_COMMON='monarc_common'
 DBNAME_CLI='monarc_cli'
-DBUSER_AMIN='root'
-DBPASSWORD_AMIN="$(openssl rand -hex 32)"
+DBUSER_ADMIN='root'
+DBPASSWORD_ADMIN="$(openssl rand -hex 32)"
 DBUSER_MONARC='sqlmonarcuser'
 DBPASSWORD_MONARC="$(openssl rand -hex 32)"
 
@@ -37,8 +37,8 @@ echo "--- Install base packages ---"
 sudo apt-get -y install vim zip unzip git gettext curl net-tools gsfonts  > /dev/null 2>&1
 
 echo "--- Install MariaDB specific packages and settings ---"
-echo "mysql-server mysql-server/root_password password $DBPASSWORD_AMIN" | sudo debconf-set-selections
-echo "mysql-server mysql-server/root_password_again password $DBPASSWORD_AMIN" | sudo debconf-set-selections
+echo "mysql-server mysql-server/root_password password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
+echo "mysql-server mysql-server/root_password_again password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
 sudo apt-get -y install mariadb-server mariadb-client > /dev/null 2>&1
 
 echo "--- Installing PHP-specific packages ---"
@@ -62,9 +62,9 @@ sudo sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
 #sed -i "s/display_errors = .*/display_errors = On/" /etc/php/7.0/apache2/php.ini
 
 echo "--- Setting up our MySQL user for MONARC ---"
-sudo mysql -u root -p$DBPASSWORD_AMIN -e "CREATE USER '$DBUSER_MONARC'@'localhost' IDENTIFIED BY '$DBPASSWORD_MONARC';"
-sudo mysql -u root -p$DBPASSWORD_AMIN -e "GRANT ALL PRIVILEGES ON * . * TO '$DBUSER_MONARC'@'localhost';"
-sudo mysql -u root -p$DBPASSWORD_AMIN -e "FLUSH PRIVILEGES;"
+sudo mysql -u root -p$DBPASSWORD_ADMIN -e "CREATE USER '$DBUSER_MONARC'@'localhost' IDENTIFIED BY '$DBPASSWORD_MONARC';"
+sudo mysql -u root -p$DBPASSWORD_ADMIN -e "GRANT ALL PRIVILEGES ON * . * TO '$DBUSER_MONARC'@'localhost';"
+sudo mysql -u root -p$DBPASSWORD_ADMIN -e "FLUSH PRIVILEGES;"
 
 echo "--- Retrieving MONARC... ---"
 sudo mkdir -p $PATH_TO_MONARC
@@ -139,6 +139,13 @@ sudo systemctl restart apache2.service > /dev/null 2>&1
 echo "--- Configuration of MONARC data base connection ---"
 sudo -u monarc cat > config/autoload/local.php <<EOF
 <?php
+\$appdir = getenv('APP_DIR') ? getenv('APP_DIR') : '$PATH_TO_MONARC';
+\$string = file_get_contents(\$appdir.'/package.json');
+if(\$string === FALSE) {
+    \$string = file_get_contents('./package.json');
+}
+\$package_json = json_decode(\$string, true);
+
 return array(
     'doctrine' => array(
         'connection' => array(
@@ -161,7 +168,7 @@ return array(
             ),
         ),
 
-        /* Link with (ModuleCore)
+    /* Link with (ModuleCore)
     config['languages'] = [
         'fr' => array(
             'index' => 1,
@@ -175,17 +182,20 @@ return array(
             'index' => 3,
             'label' => 'Deutsch'
         ),
-        'ne' => array(
-            'index' => 4,
-            'label' => 'Nederlands'
-        ),
     ]
     */
-    'activeLanguages' => array('fr','en','de','ne'),
+    'activeLanguages' => array('fr','en','de','ne',),
+
+    'appVersion' => \$package_json['version'],
+
+    'email' => [
+            'name' => 'MONARC',
+            'from' => 'info@monarc.lu',
+    ],
 
     'monarc' => array(
         'ttl' => 20, // timeout
-        'salt' => '', // salt for the password
+        'salt' => '', // salt privé pour chiffrement pwd
     ),
 );
 EOF
@@ -225,5 +235,5 @@ echo "--- MONARC is ready! ---"
 echo "Login and passwords for the MONARC image are the following:"
 echo "MONARC application: admin@admin.test:admin"
 echo "SSH login: monarc:password"
-echo "Mysql root login: $DBUSER_AMIN:$DBPASSWORD_AMIN"
+echo "Mysql root login: $DBUSER_ADMIN:$DBPASSWORD_ADMIN"
 echo "Mysql MONARC login: $DBUSER_MONARC:$DBPASSWORD_MONARC"
