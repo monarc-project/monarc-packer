@@ -230,6 +230,7 @@ echo "--- Update the project… ---"
 sudo -u monarc ./scripts/update-all.sh
 
 sudo -u monarc composer config github-oauth.github.com ''
+rm auth.json
 
 echo "--- Create initial user and client ---"
 sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx seed:run -c ./module/MonarcFO/migrations/phinx.php
