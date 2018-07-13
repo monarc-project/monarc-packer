@@ -2,11 +2,6 @@
 
 # Variables
 MonarcAppFO_Git_Repo='https://github.com/monarc-project/MonarcAppFO.git'
-BRANCH='master'
-#BRANCH='v0.1'
-#TAG='v0.1'
-TAG=''
-
 PATH_TO_MONARC='/var/lib/monarc/fo'
 
 APPENV='local'
@@ -77,19 +72,12 @@ sudo mysql -u root -p$DBPASSWORD_ADMIN -e "FLUSH PRIVILEGES;"
 echo "--- Retrieving MONARC… ---"
 sudo mkdir -p $PATH_TO_MONARC
 sudo chown monarc:monarc $PATH_TO_MONARC
-sudo -u monarc git clone --config core.filemode=false -b $BRANCH $MonarcAppFO_Git_Repo $PATH_TO_MONARC
+sudo -u monarc git clone --config core.filemode=false $MonarcAppFO_Git_Repo $PATH_TO_MONARC
 if [ $? -ne 0 ]; then
     echo "ERROR: unable to clone the MOMARC repository"
     exit 1;
 fi
 cd $PATH_TO_MONARC
-if [ "$TAG" != '' ]; then
-    # Checkout the latest tag
-    cd $PATH_TO_MONARC
-    #latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-    git checkout $TAG
-    cd ..
-fi
 
 echo "--- Installing composer… ---"
 curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer > /dev/null
