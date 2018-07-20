@@ -184,6 +184,9 @@ return array(
 
     'appVersion' => \$package_json['version'],
 
+    'checkVersion' => true,
+    'appCheckingURL' => 'https://version.monarc.lu/check/MONARC',
+
     'email' => [
             'name' => 'MONARC',
             'from' => 'info@monarc.lu',
