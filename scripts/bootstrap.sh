@@ -34,8 +34,10 @@ echo "--- Installing MONARC FO… ---"
 echo "--- Updating packages list… ---"
 sudo apt-get update
 
+
 echo "--- Install base packages… ---"
-sudo apt-get -y install vim zip unzip git gettext curl net-tools gsfonts  > /dev/null
+sudo apt-get -y install vim zip unzip git gettext curl net-tools gsfonts curl  > /dev/null
+
 
 echo "--- Install MariaDB specific packages and settings… ---"
 # echo "mysql-server mysql-server/root_password password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
@@ -69,10 +71,10 @@ expect eof
 EOF
 sudo apt-get purge -y expect > /dev/null 2>&1
 
+
 echo "--- Installing PHP-specific packages… ---"
 sudo apt-get -y install php apache2 libapache2-mod-php php-curl php-gd php-mcrypt php-mysql php-pear php-apcu php-xml php-mbstring php-intl php-imagick php-zip > /dev/null
-sleep 5 # give some time to the DB to launch...
-sudo systemctl restart mariadb.service
+
 
 echo "--- Configuring PHP ---"
 for key in upload_max_filesize post_max_size max_execution_time max_input_time memory_limit
@@ -80,9 +82,11 @@ do
  sudo sed -i "s/^\($key\).*/\1 = $(eval echo \${$key})/" $PHP_INI
 done
 
+
 echo "--- Enabling mod-rewrite and ssl… ---"
 sudo a2enmod rewrite > /dev/null
 sudo a2enmod ssl > /dev/null
+
 
 echo "--- Allowing Apache override to all ---"
 sudo sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
@@ -91,10 +95,12 @@ sudo sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
 #sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/7.0/apache2/php.ini
 #sed -i "s/display_errors = .*/display_errors = On/" /etc/php/7.0/apache2/php.ini
 
+
 echo "--- Setting up our MySQL user for MONARC… ---"
 sudo mysql -u root -p$DBPASSWORD_ADMIN -e "CREATE USER '$DBUSER_MONARC'@'localhost' IDENTIFIED BY '$DBPASSWORD_MONARC';"
 sudo mysql -u root -p$DBPASSWORD_ADMIN -e "GRANT ALL PRIVILEGES ON * . * TO '$DBUSER_MONARC'@'localhost';"
 sudo mysql -u root -p$DBPASSWORD_ADMIN -e "FLUSH PRIVILEGES;"
+
 
 echo "--- Retrieving MONARC… ---"
 sudo mkdir -p $PATH_TO_MONARC
@@ -106,6 +112,7 @@ if [ $? -ne 0 ]; then
 fi
 cd $PATH_TO_MONARC
 
+
 echo "--- Installing composer… ---"
 curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer > /dev/null
 if [ $? -ne 0 ]; then
@@ -115,6 +122,7 @@ fi
 sudo composer self-update
 sudo -u monarc composer config github-oauth.github.com $GITHUB_AUTH_TOKEN
 sudo -u monarc composer install -o
+
 
 echo "--- Retrieving MONARC libraries… ---"
 # Modules
@@ -155,8 +163,6 @@ sudo bash -c "cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
     SetEnv APPLICATION_ENV $ENVIRONMENT
 </VirtualHost>
 EOF"
-echo "--- Restarting Apache… ---"
-sudo systemctl restart apache2.service > /dev/null
 
 
 echo "--- Configuration of MONARC data base connection… ---"
@@ -221,7 +227,7 @@ return array(
 
     'monarc' => array(
         'ttl' => 60, // timeout
-        'salt' => '', // salt privé pour chiffrement pwd
+        'salt' => '', // private salt for password
     ),
 );
 EOF
