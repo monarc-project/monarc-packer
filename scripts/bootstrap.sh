@@ -38,9 +38,36 @@ echo "--- Install base packages… ---"
 sudo apt-get -y install vim zip unzip git gettext curl net-tools gsfonts  > /dev/null
 
 echo "--- Install MariaDB specific packages and settings… ---"
-echo "mysql-server mysql-server/root_password password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
-echo "mysql-server mysql-server/root_password_again password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
+# echo "mysql-server mysql-server/root_password password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
+# echo "mysql-server mysql-server/root_password_again password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
 sudo apt-get -y install mariadb-server mariadb-client > /dev/null
+# Secure the MariaDB installation (especially by setting a strong root password)
+sudo systemctl restart mariadb.service > /dev/null
+sleep 5
+sudo apt-get -y install expect > /dev/null
+## do we need to spawn mysql_secure_install with sudo in future?
+expect -f - <<-EOF
+set timeout 10
+spawn mysql_secure_installation
+expect "Enter current password for root (enter for none):"
+send -- "\r"
+expect "Set root password?"
+send -- "y\r"
+expect "New password:"
+send -- "${DBPASSWORD_ADMIN}\r"
+expect "Re-enter new password:"
+send -- "${DBPASSWORD_ADMIN}\r"
+expect "Remove anonymous users?"
+send -- "y\r"
+expect "Disallow root login remotely?"
+send -- "y\r"
+expect "Remove test database and access to it?"
+send -- "y\r"
+expect "Reload privilege tables now?"
+send -- "y\r"
+expect eof
+EOF
+sudo apt-get purge -y expect > /dev/null 2>&1
 
 echo "--- Installing PHP-specific packages… ---"
 sudo apt-get -y install php apache2 libapache2-mod-php php-curl php-gd php-mcrypt php-mysql php-pear php-apcu php-xml php-mbstring php-intl php-imagick php-zip > /dev/null
