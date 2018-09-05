@@ -7,6 +7,7 @@ PATH_TO_MONARC='/var/lib/monarc/fo'
 APPENV='local'
 ENVIRONMENT='PRODUCTION'
 
+# Database configuration
 DBHOST='localhost'
 DBNAME_COMMON='monarc_common'
 DBNAME_CLI='monarc_cli'
@@ -15,6 +16,10 @@ DBPASSWORD_ADMIN="$(openssl rand -hex 32)"
 DBUSER_MONARC='sqlmonarcuser'
 DBPASSWORD_MONARC="$(openssl rand -hex 32)"
 
+# Timing creation
+TIME_START=$(date +%s)
+
+# php.ini configuration
 upload_max_filesize=200M
 post_max_size=50M
 max_execution_time=100
@@ -263,6 +268,9 @@ sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx seed:run -c ./module/Mon
 echo "--- Restarting Apache… ---"
 sudo systemctl restart apache2.service > /dev/null
 
+TIME_END=$(date +%s)
+TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
+
 
 echo "--- MONARC is ready! ---"
 echo "Login and passwords for the MONARC image are the following:"
@@ -270,3 +278,6 @@ echo "MONARC application: admin@admin.test:admin"
 echo "SSH login: monarc:password"
 echo "Mysql root login: $DBUSER_ADMIN:$DBPASSWORD_ADMIN"
 echo "Mysql MONARC login: $DBUSER_MONARC:$DBPASSWORD_MONARC"
+
+
+echo "The generation took ${TIME_DELTA} seconds"
