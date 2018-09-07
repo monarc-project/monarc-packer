@@ -3,21 +3,36 @@
         "ssh_name": "monarc",
         "ssh_pass": "password",
         "hostname": "monarc",
-        "vm_name": "MONARC_demo",
+        "vm_name": "MONARC",
+        "vm_description": "MONARC - Method for an Optimised aNAlysis of Risks by CASES.",
+        "vm_version": "{{env `MONARC_VERSION`}}",
+        "latest_commit": "{{env `LATEST_COMMIT`}}",
         "GITHUB_AUTH_TOKEN": "{{env `GITHUB_AUTH_TOKEN`}}",
-        "disk_size": "10000"
+        "disk_size": "10000",
+        "cpus": "2",
+        "memory": "1024",
+        "vram": "64"
     },
 
     "builders": [{
         "type": "virtualbox-iso",
         "guest_os_type": "Ubuntu_64",
         "format": "ova",
-        "vm_name": "{{user `vm_name`}}",
+        "vm_name": "{{user `vm_name`}}_{{user `vm_version`}}@{{user `latest_commit`}}",
+
+        "export_opts":
+        [
+            "--manifest",
+            "--vsys", "0",
+            "--eulafile", "/tmp/LICENSE-MONARC",
+            "--description", "{{user `vm_description`}}",
+            "--version", "{{user `vm_version`}}"
+        ],
 
         "vboxmanage": [
-            ["modifyvm", "{{.Name}}", "--vram", "64"],
-            ["modifyvm", "{{.Name}}", "--memory", "1024"],
-            ["modifyvm", "{{.Name}}", "--cpus", "2"]
+            ["modifyvm", "{{.Name}}", "--vram", "{{user `vram`}}"],
+            ["modifyvm", "{{.Name}}", "--memory", "{{user `memory`}}"],
+            ["modifyvm", "{{.Name}}", "--cpus", "{{user `cpus`}}"]
         ],
 
         "disk_size": "{{user `disk_size`}}",

@@ -8,7 +8,7 @@
 ## Usage
 
     $ export GITHUB_AUTH_TOKEN=<your-github-auth-token>
-    $ packer build monarc.json
+    $ ./deploy.sh
 
 A VirtualBox image will be generated and stored in the folder
 *output-virtualbox-iso*. You can directly import it in VirtualBox.
@@ -23,8 +23,8 @@ The sha1 and sha512 checksums of the generated VM will be stored in the files
 ### Automatic export to GitHub
 
     $ GITHUB_AUTH_TOKEN=<your-github-auth-token>
-    $ TAG=$(curl https://api.github.com/repos/monarc-project/MonarcAppFO/releases/latest | jq  -r '.tag_name')
-    $ ./upload.sh github_api_token=$GITHUB_AUTH_TOKEN owner=monarc-project repo=MonarcAppFO tag=$TAG filename=./output-virtualbox-iso/MONARC_demo.ova
+    $ MONARC_VERSION=$(curl -H 'Content-Type: application/json' https://api.github.com/repos/monarc-project/MonarcAppFO/releases/latest | jq  -r '.tag_name')
+    $ ./upload.sh github_api_token=$GITHUB_AUTH_TOKEN owner=monarc-project repo=MonarcAppFO tag=$MONARC_VERSION filename=./output-virtualbox-iso/MONARC_demo.ova
 
 You can add these lines in the *post-processors* section of the file *monarc.json*
 if you want to automate the process.
