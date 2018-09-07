@@ -18,7 +18,7 @@
         "type": "virtualbox-iso",
         "guest_os_type": "Ubuntu_64",
         "format": "ova",
-        "vm_name": "{{user `vm_name`}}_{{user `vm_version`}}@{{user `latest_commit`}}",
+        "vm_name": "{{user `vm_name`}}_{{user `vm_version`}}_{{user `latest_commit`}}",
 
         "export_opts":
         [
