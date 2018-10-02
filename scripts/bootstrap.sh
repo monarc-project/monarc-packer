@@ -25,7 +25,7 @@ post_max_size=50M
 max_execution_time=100
 max_input_time=223
 memory_limit=512M
-PHP_INI=/etc/php/7.1/apache2/php.ini
+PHP_INI=/etc/php/7.2/apache2/php.ini
 
 export DEBIAN_FRONTEND=noninteractive
 export LANGUAGE=en_US.UTF-8
@@ -41,7 +41,7 @@ sudo apt-get update
 
 
 echo "--- Install base packages… ---"
-sudo apt-get -y install vim zip unzip git gettext curl net-tools gsfonts curl  > /dev/null
+sudo apt-get -y install vim zip unzip git gettext curl  > /dev/null
 
 
 echo "--- Install MariaDB specific packages and settings… ---"
@@ -78,7 +78,7 @@ sudo apt-get purge -y expect > /dev/null 2>&1
 
 
 echo "--- Installing PHP-specific packages… ---"
-sudo apt-get -y install php apache2 libapache2-mod-php php-curl php-gd php-mcrypt php-mysql php-pear php-apcu php-xml php-mbstring php-intl php-imagick php-zip > /dev/null
+sudo apt-get -y install php apache2 libapache2-mod-php php-curl php-gd php-mysql php-pear php-apcu php-xml php-mbstring php-intl php-imagick php-zip > /dev/null
 
 
 echo "--- Configuring PHP ---"
@@ -250,9 +250,8 @@ sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-b
 
 
 echo "--- Installation of Grunt… ---"
-sudo apt-get -y install nodejs > /dev/null
 sudo apt-get -y install npm > /dev/null
-sudo npm install -g grunt-cli > /dev/null
+npm install -g grunt-cli > /dev/null
 
 
 echo "--- Update the project… ---"
