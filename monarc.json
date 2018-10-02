@@ -26,8 +26,7 @@
         "format": "ova",
         "vm_name": "{{user `vm_name`}}_{{user `vm_version`}}_{{user `latest_commit`}}",
 
-        "export_opts":
-        [
+        "export_opts": [
             "--manifest",
             "--vsys", "0",
             "--eulafile", "/tmp/LICENSE-MONARC",
