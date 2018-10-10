@@ -2,8 +2,9 @@
 
 ## Requirements
 
-* [VirtualBox](https://www.virtualbox.org)
-* [Packer](https://www.packer.io) from the Packer website.
+* [VirtualBox](https://www.virtualbox.org);
+* [Packer](https://www.packer.io) from the Packer website;
+* [jq](https://github.com/stedolan/jq).
 
 ## Usage
 
@@ -26,5 +27,5 @@ The sha1 and sha512 checksums of the generated VM will be stored in the files
 *packer_virtualbox-iso_virtualbox-iso_sha512.checksum* respectively.
 
 The variable *GITHUB_AUTH_TOKEN* is only required if you want to upload the
-generated virtual machine to GitHub and may be required during the building
-(composer may need this token in order to install PHP libraries).
+generated virtual machine on GitHub and may be required during the building
+process (composer may need this token in order to install PHP libraries).
