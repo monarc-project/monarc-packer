@@ -9,6 +9,11 @@
 
     $ export GITHUB_AUTH_TOKEN=<your-github-auth-token>
     $ ./build_vm.sh
+    Retrieving information about latest MONARC release...
+    Generating a virtual machine for MONARC v2.7.2 (commit id: 99e80ba03cfba2e270473b42b4fb53dec1d2b8b0)...
+    The generation took 522 seconds
+    Do you want to upload the generated virtual machine on GitHub? [y/N] n
+    Good bye.
 
 A VirtualBox image will be generated and stored in the folder
 *output-virtualbox-iso*. You can directly import it in VirtualBox.
@@ -20,8 +25,6 @@ The sha1 and sha512 checksums of the generated VM will be stored in the files
 *packer_virtualbox-iso_virtualbox-iso_sha1.checksum* and
 *packer_virtualbox-iso_virtualbox-iso_sha512.checksum* respectively.
 
-### Export to GitHub
-
-    $ MONARC_VERSION=$(curl -H 'Content-Type: application/json' https://api.github.com/repos/monarc-project/MonarcAppFO/releases/latest | jq  -r '.tag_name')
-
-    $ ./upload.sh github_api_token=$GITHUB_AUTH_TOKEN owner=monarc-project repo=MonarcAppFO tag=$MONARC_VERSION filename=./output-virtualbox-iso/MONARC_demo.ova
+The variable *GITHUB_AUTH_TOKEN* is only required if you want to upload the
+generated virtual machine to GitHub and may be required during the building
+(composer may need this token in order to install PHP libraries).
