@@ -21,7 +21,6 @@ rm *.checksum  2> /dev/null
 echo "Generating a virtual machine for MONARC $MONARC_VERSION (commit id: $LATEST_COMMIT)..."
 packer build monarc.json
 
-
 TIME_END=$(date +%s)
 TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
 echo "The generation took ${TIME_DELTA} seconds"
@@ -38,5 +37,4 @@ case "$response" in
 esac
 
 echo "Good bye."
-
 exit 0
