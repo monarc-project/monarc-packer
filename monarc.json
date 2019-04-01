@@ -14,9 +14,9 @@
         "latest_commit": "{{env `LATEST_COMMIT`}}",
         "GITHUB_AUTH_TOKEN": "{{env `GITHUB_AUTH_TOKEN`}}",
 
-        "disk_size": "25000",
+        "disk_size": "50000",
         "cpus": "2",
-        "memory": "2048",
+        "memory": "4096",
         "vram": "32"
     },
 
