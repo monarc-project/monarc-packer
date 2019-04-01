@@ -237,8 +237,9 @@ return array(
 );
 EOF
 
-
+sudo mkdir $PATH_TO_MONARC/data
 sudo chown -R www-data $PATH_TO_MONARC/data
+sudo chmod -R 777 data/
 
 
 echo "--- Creation of the data bases… ---"
