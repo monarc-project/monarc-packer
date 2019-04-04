@@ -91,6 +91,7 @@ done
 echo "--- Enabling mod-rewrite and ssl… ---"
 sudo a2enmod rewrite > /dev/null
 sudo a2enmod ssl > /dev/null
+sudo a2enmod headers > /dev/null
 
 
 echo "--- Allowing Apache override to all ---"
@@ -164,6 +165,13 @@ sudo bash -c "cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
         AllowOverride All
         Require all granted
     </Directory>
+
+    <IfModule mod_headers.c>
+       Header always set X-Content-Type-Options nosniff
+       Header always set X-XSS-Protection '1; mode=block'
+       Header always set X-Robots-Tag none
+       Header always set X-Frame-Options SAMEORIGIN
+    </IfModule>
 
     SetEnv APPLICATION_ENV $ENVIRONMENT
 </VirtualHost>
