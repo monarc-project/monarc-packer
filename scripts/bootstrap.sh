@@ -226,7 +226,7 @@ return array(
         ),
     ]
     */
-    'activeLanguages' => array('fr','en','de','ne',),
+    'activeLanguages' => array('fr','en','de','nl',),
 
     'appVersion' => \$package_json['version'],
 
