@@ -29,7 +29,7 @@ echo "The generation took ${TIME_DELTA} seconds"
 read -r -p "Do you want to upload the generated virtual machine on GitHub? [y/N] " response
 case "$response" in
     [yY][eE][sS]|[yY])
-        ./upload.sh github_api_token=$GITHUB_AUTH_TOKEN owner=monarc-project repo=MonarcAppFO tag=$MONARC_VERSION filename=output-virtualbox-iso/*.ova
+        ./upload.sh github_api_token=$GITHUB_AUTH_TOKEN owner=monarc-project repo=MonarcAppFO tag=$MONARC_VERSION filename=output-virtualbox-iso/MONARC_$MONARC_VERSION_$LATEST_COMMIT.ova
         ;;
     *)
         :
