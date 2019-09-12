@@ -38,6 +38,7 @@ echo "--- Installing MONARC FO… ---"
 
 echo "--- Updating packages list… ---"
 sudo apt-get update
+sudo apt-get -y upgrade
 
 
 echo "--- Install base packages… ---"
@@ -258,8 +259,10 @@ sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-b
 sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc_data.sql > /dev/null
 
 
-echo "--- Installation of Grunt… ---"
+echo "--- Installation Node, NPM and Grunt… ---"
 sudo apt-get -y install npm > /dev/null
+sudo npm install -g n > /dev/null
+sudo n latest > /dev/null
 npm install -g grunt-cli > /dev/null
 
 
