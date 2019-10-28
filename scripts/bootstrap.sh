@@ -4,8 +4,7 @@
 MonarcAppFO_Git_Repo='https://github.com/monarc-project/MonarcAppFO.git'
 PATH_TO_MONARC='/var/lib/monarc/fo'
 
-APPENV='local'
-ENVIRONMENT='PRODUCTION'
+ENVIRONMENT='production'
 
 # Database configuration
 DBHOST='localhost'
@@ -79,7 +78,7 @@ sudo apt-get purge -y expect > /dev/null 2>&1
 
 
 echo "--- Installing PHP-specific packages… ---"
-sudo apt-get -y install php apache2 libapache2-mod-php php-curl php-gd php-mysql php-pear php-apcu php-xml php-mbstring php-intl php-imagick php-zip > /dev/null
+sudo apt-get -y install php apache2 libapache2-mod-php php-curl php-gd php-mysql php-pear php-apcu php-xml php-mbstring php-intl php-imagick php-zip composer > /dev/null
 
 
 echo "--- Configuring PHP ---"
@@ -120,23 +119,15 @@ fi
 cd $PATH_TO_MONARC
 
 
-echo "--- Installing composer… ---"
-curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer > /dev/null
-if [ $? -ne 0 ]; then
-    echo "ERROR: unable to install composer"
-    exit 1;
-fi
-sudo composer self-update
+echo "--- Installing MONARC core modules… ---"
 sudo -u monarc composer config github-oauth.github.com $GITHUB_AUTH_TOKEN
 sudo -u monarc composer install -o
 
-
-echo "--- Retrieving MONARC libraries… ---"
 # Modules
-sudo -u monarc mkdir module
-cd module
-sudo -u monarc ln -s ./../vendor/monarc/core MonarcCore
-sudo -u monarc ln -s ./../vendor/monarc/frontoffice MonarcFO
+sudo -u monarc mkdir -p module/Monarc
+cd module/Monarc
+sudo -u monarc ln -s ./../../vendor/monarc/core Core
+sudo -u monarc ln -s ./../../vendor/monarc/frontoffice FrontOffice
 cd ..
 
 # Interfaces
@@ -246,7 +237,8 @@ return array(
 );
 EOF
 
-sudo mkdir $PATH_TO_MONARC/data
+sudo mkdir -p $PATH_TO_MONARC/data/cache
+sudo mkdir -p $PATH_TO_MONARC/data/LazyServices/Proxy
 sudo chown -R www-data $PATH_TO_MONARC/data
 sudo chmod -R 777 data/
 
