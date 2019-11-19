@@ -47,7 +47,7 @@ sudo apt-get -y install vim zip unzip git gettext curl  > /dev/null
 echo "--- Install MariaDB specific packages and settings… ---"
 # echo "mysql-server mysql-server/root_password password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
 # echo "mysql-server mysql-server/root_password_again password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
-sudo apt-get -y install mariadb-server mariadb-client > /dev/null
+sudo apt-get -y install mariadb-server > /dev/null
 # Secure the MariaDB installation (especially by setting a strong root password)
 sudo systemctl restart mariadb.service > /dev/null
 sleep 5
@@ -97,10 +97,6 @@ sudo a2enmod headers > /dev/null
 echo "--- Allowing Apache override to all ---"
 sudo sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
 
-#echo "--- We want to see the PHP errors, turning them on ---"
-#sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/7.0/apache2/php.ini
-#sed -i "s/display_errors = .*/display_errors = On/" /etc/php/7.0/apache2/php.ini
-
 
 echo "--- Setting up our MySQL user for MONARC… ---"
 sudo mysql -u root -p$DBPASSWORD_ADMIN -e "CREATE USER '$DBUSER_MONARC'@'localhost' IDENTIFIED BY '$DBPASSWORD_MONARC';"
@@ -120,7 +116,6 @@ cd $PATH_TO_MONARC
 
 
 echo "--- Installing MONARC core modules… ---"
-sudo -u monarc composer config github-oauth.github.com $GITHUB_AUTH_TOKEN
 sudo -u monarc composer install -o
 
 # Modules
@@ -128,9 +123,9 @@ sudo -u monarc mkdir -p module/Monarc
 cd module/Monarc
 sudo -u monarc ln -s ./../../vendor/monarc/core Core
 sudo -u monarc ln -s ./../../vendor/monarc/frontoffice FrontOffice
-cd ..
 
 # Interfaces
+cd $PATH_TO_MONARC
 sudo -u monarc mkdir node_modules
 cd node_modules
 sudo -u monarc git clone --config core.filemode=false https://github.com/monarc-project/ng-client.git ng_client > /dev/null
@@ -143,7 +138,6 @@ if [ $? -ne 0 ]; then
     echo "ERROR: unable to clone the ng-anr repository"
     exit 1;
 fi
-cd ..
 
 
 echo "--- Add a VirtualHost for MONARC… ---"
@@ -171,14 +165,10 @@ EOF"
 
 
 echo "--- Configuration of MONARC data base connection… ---"
+cd $PATH_TO_MONARC
 sudo -u monarc cat > config/autoload/local.php <<EOF
 <?php
-\$appdir = getenv('APP_DIR') ? getenv('APP_DIR') : '$PATH_TO_MONARC';
-\$string = file_get_contents(\$appdir.'/package.json');
-if(\$string === FALSE) {
-    \$string = file_get_contents('./package.json');
-}
-\$package_json = json_decode(\$string, true);
+\$package_json = json_decode('./package.json', true);
 
 return array(
     'doctrine' => array(
@@ -252,20 +242,17 @@ sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-b
 
 
 echo "--- Installation Node, NPM and Grunt… ---"
-sudo apt-get -y install npm > /dev/null
-sudo npm install -g n > /dev/null
-sudo n latest > /dev/null
-npm install -g grunt-cli > /dev/null
+curl -sL https://deb.nodesource.com/setup_13.x | sudo bash -
+sudo apt-get install -y nodejs
+sudo npm install -g grunt-cli
 
 
 echo "--- Update the project… ---"
 sudo -u monarc ./scripts/update-all.sh
 
-sudo -u monarc composer config github-oauth.github.com ''
-rm auth.json
 
 echo "--- Create initial user and client ---"
-sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx seed:run -c ./module/MonarcFO/migrations/phinx.php
+sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx seed:run -c ./module/Monarc/FrontOffice/migrations/phinx.php
 
 
 echo "--- Restarting Apache… ---"
