@@ -264,7 +264,7 @@ TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
 
 echo "--- MONARC is ready! ---"
 echo "Login and passwords for the MONARC image are the following:"
-echo "MONARC application: admin@admin.test:admin"
+echo "MONARC application: admin@admin.localhost:admin"
 echo "SSH login: monarc:password"
 echo "Mysql root login: $DBUSER_ADMIN:$DBPASSWORD_ADMIN"
 echo "Mysql MONARC login: $DBUSER_MONARC:$DBPASSWORD_MONARC"
