@@ -229,8 +229,9 @@ EOF
 
 sudo mkdir -p $PATH_TO_MONARC/data/cache
 sudo mkdir -p $PATH_TO_MONARC/data/LazyServices/Proxy
-sudo chown -R www-data $PATH_TO_MONARC/data
-sudo chmod -R 777 data/
+sudo mkdir -p $PATH_TO_MONARC/data/DoctrineORMModule/Proxy
+sudo chown -R www-data data
+sudo chmod -R 777 data
 
 
 echo "--- Creation of the data bases… ---"
