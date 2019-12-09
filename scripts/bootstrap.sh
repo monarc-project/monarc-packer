@@ -168,7 +168,7 @@ echo "--- Configuration of MONARC data base connection… ---"
 cd $PATH_TO_MONARC
 sudo -u monarc cat > config/autoload/local.php <<EOF
 <?php
-\$package_json = json_decode('./package.json', true);
+\$package_json = json_decode(file_get_contents('./package.json'), true);
 
 return array(
     'doctrine' => array(
