@@ -12,7 +12,6 @@
         "vm_version": "{{env `MONARC_VERSION`}}",
 
         "latest_commit": "{{env `LATEST_COMMIT`}}",
-        "GITHUB_AUTH_TOKEN": "{{env `GITHUB_AUTH_TOKEN`}}",
 
         "disk_size": "50000",
         "cpus": "2",
@@ -86,7 +85,6 @@
     },
     {
         "type": "shell",
-        "environment_vars": "GITHUB_AUTH_TOKEN={{user `GITHUB_AUTH_TOKEN`}}",
         "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
         "script": "scripts/bootstrap.sh",
         "pause_before": "10s"
