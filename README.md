@@ -26,6 +26,5 @@ The sha1 and sha512 checksums of the generated VM will be stored in the files
 *packer_virtualbox-iso_virtualbox-iso_sha1.checksum* and
 *packer_virtualbox-iso_virtualbox-iso_sha512.checksum* respectively.
 
-The variable *GITHUB_AUTH_TOKEN* is only required if you want to upload the
-generated virtual machine on GitHub and may be required during the building
-process (composer may need this token in order to install PHP libraries).
+The variable *GITHUB_AUTH_TOKEN* is required if you want to upload the
+generated virtual machine on GitHub.
