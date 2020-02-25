@@ -78,7 +78,13 @@ sudo apt-get purge -y expect > /dev/null 2>&1
 
 
 echo "--- Installing PHP-specific packages… ---"
-sudo apt-get -y install php apache2 libapache2-mod-php php-curl php-gd php-mysql php-pear php-apcu php-xml php-mbstring php-intl php-imagick php-zip composer > /dev/null
+sudo apt-get -y install php apache2 libapache2-mod-php php-curl php-gd php-mysql php-pear php-apcu php-xml php-mbstring php-intl php-imagick php-zip > /dev/null
+
+
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php -r "if (hash_file('sha384', 'composer-setup.php') === 'e0012edf3e80b6978849f5eff0d4b4e4c79ff1609dd1e613307e16318854d24ae64f26d17af3ef0bf7cfb710ca74755a') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+php composer-setup.php --install-dir=/tmp --filename=composer
+mv /tmp/composer /usr/local/bin/composer
 
 
 echo "--- Configuring PHP ---"
@@ -116,7 +122,7 @@ cd $PATH_TO_MONARC
 
 
 echo "--- Installing MONARC core modules… ---"
-sudo -u monarc composer install -o
+sudo -u monarc composer install -o --no-dev
 
 # Modules
 sudo -u monarc mkdir -p module/Monarc
