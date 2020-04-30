@@ -41,8 +41,8 @@
 
         "disk_size": "{{user `disk_size`}}",
 
-        "iso_url": "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.3-server-amd64.iso",
-        "iso_checksum": "7d8e0055d663bffa27c1718685085626cb59346e7626ba3d3f476322271f573e",
+        "iso_url": "http://cdimage.ubuntu.com/ubuntu/releases/20.04/release/ubuntu-20.04-live-server-arm64.iso",
+        "iso_checksum": "46d5ee0843e5da7e170fa84b5f4e9e474456180659221ec6cc2dc60f6fcd1b06",
         "iso_checksum_type": "sha256",
 
         "http_directory" : "preseeds",
