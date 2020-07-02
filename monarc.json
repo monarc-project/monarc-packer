@@ -1,11 +1,10 @@
 {
     "variables": {
-        "boot_command_prefix": "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
-        "preseed": "preseed.cfg",
+        "boot_command_prefix": "<enter><enter><f6><esc><wait> ",
         "ssh_fullname": "monarc",
         "ssh_name": "monarc",
         "ssh_pass": "password",
-        "hostname": "monarc",
+        "hostname": "monarc-vm",
 
         "vm_name": "MONARC",
         "vm_description": "MONARC - Method for an Optimised aNAlysis of Risks by CASES.",
@@ -13,6 +12,7 @@
 
         "latest_commit": "{{env `LATEST_COMMIT`}}",
 
+        "headless": "false",
         "disk_size": "50000",
         "cpus": "2",
         "memory": "4096",
@@ -41,11 +41,12 @@
 
         "disk_size": "{{user `disk_size`}}",
 
-        "iso_url": "http://cdimage.ubuntu.com/ubuntu/releases/20.04/release/ubuntu-20.04-live-server-arm64.iso",
-        "iso_checksum": "46d5ee0843e5da7e170fa84b5f4e9e474456180659221ec6cc2dc60f6fcd1b06",
+        "iso_url": "http://cdimage.ubuntu.com/ubuntu-legacy-server/releases/20.04/release/ubuntu-20.04-legacy-server-amd64.iso",
+        "iso_checksum": "36f15879bd9dfd061cd588620a164a82972663fdd148cce1f70d57d314c21b73",
         "iso_checksum_type": "sha256",
 
-        "http_directory" : "preseeds",
+        "headless": "{{ user `headless` }}",
+        "http_directory" : "http",
         "http_port_min" : 9001,
         "http_port_max" : 9011,
 
@@ -57,22 +58,30 @@
         "shutdown_command": "echo {{user `ssh_pass`}} | sudo -S shutdown -P now",
 
         "boot_command": [
-            "{{ user `boot_command_prefix` }}",
-            "/install/vmlinuz noapic ",
-            "initrd=/install/initrd.gz ",
-            "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
-            "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
-            "hostname={{ user `hostname` }} ",
-            "grub-installer/bootdev=/dev/sda<wait> ",
-            "fb=false debconf/frontend=noninteractive ",
-            "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
-            "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
-            "passwd/user-fullname={{ user `ssh_fullname` }} ",
-            "passwd/user-password={{ user `ssh_password` }} ",
-            "passwd/user-password-again={{ user `ssh_password` }} ",
-            "passwd/username={{ user `ssh_username` }} ",
-            "-- <enter>"
-        ]
+        "<esc><wait>",
+        "<esc><wait>",
+        "<enter><wait>",
+        "/install/vmlinuz",
+        " auto=true",
+        " url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg",
+        " locale=en_US<wait>",
+        " console-setup/ask_detect=false<wait>",
+        " console-setup/layoutcode=us<wait>",
+        " console-setup/modelcode=pc105<wait>",
+        " debconf/frontend=noninteractive<wait>",
+        " debian-installer=en_US<wait>",
+        " fb=false<wait>",
+        " initrd=/install/initrd.gz<wait>",
+        " kbd-chooser/method=us<wait>",
+        " keyboard-configuration/layout=USA<wait>",
+        " keyboard-configuration/variant=USA<wait>",
+        " netcfg/get_domain=vm<wait>",
+        " netcfg/get_hostname=vagrant<wait>",
+        " grub-installer/bootdev=/dev/sda<wait>",
+        " noapic<wait>",
+        " -- <wait>",
+        "<enter><wait>"
+      ]
     }
 	],
 
