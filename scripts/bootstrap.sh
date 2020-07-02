@@ -24,7 +24,7 @@ post_max_size=50M
 max_execution_time=100
 max_input_time=223
 memory_limit=512M
-PHP_INI=/etc/php/7.2/apache2/php.ini
+PHP_INI=/etc/php/7.4/apache2/php.ini
 
 export DEBIAN_FRONTEND=noninteractive
 export LANGUAGE=en_US.UTF-8
@@ -249,7 +249,7 @@ sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-b
 
 
 echo "--- Installation Node, NPM and Grunt… ---"
-curl -sL https://deb.nodesource.com/setup_13.x | sudo bash -
+curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -
 sudo apt-get install -y nodejs
 sudo npm install -g grunt-cli
 
