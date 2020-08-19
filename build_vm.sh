@@ -3,15 +3,16 @@
 # Timing creation
 TIME_START=$(date +%s)
 
-AUTH="Authorization: token $GITHUB_AUTH_TOKEN"
+#AUTH="Authorization: token $GITHUB_AUTH_TOKEN"
 
 # Latest version of MONARC
 echo "Retrieving information about latest MONARC release..."
-export MONARC_VERSION=$(curl --silent -sH "$AUTH" -H 'Content-Type: application/json' https://api.github.com/repos/monarc-project/MonarcAppFO/releases/latest | jq  -r '.tag_name')
+export MONARC_VERSION=$(curl --silent -H 'Content-Type: application/json' https://api.github.com/repos/monarc-project/MonarcAppFO/releases/latest | jq  -r '.tag_name')
 # Latest commit hash of MONARC
-export LATEST_COMMIT=$(curl --silent -sH "$AUTH" -H 'Content-Type: application/json' -s https://api.github.com/repos/monarc-project/MonarcAppFO/commits  | jq -r '.[0] | .sha')
+export LATEST_COMMIT=$(curl --silent -H 'Content-Type: application/json' -s https://api.github.com/repos/monarc-project/MonarcAppFO/commits | jq -e -r '.[0] | .sha')
+
 # Fetching latest MONARC LICENSE
-/usr/bin/wget -q -O /tmp/LICENSE-MONARC https://raw.githubusercontent.com/monarc-project/MonarcAppFO/master/LICENSE
+wget -q -O /tmp/LICENSE-MONARC https://raw.githubusercontent.com/monarc-project/MonarcAppFO/master/LICENSE
 # Enable logging for packer
 PACKER_LOG=1
 
@@ -21,7 +22,7 @@ rm *.checksum  2> /dev/null
 
 # Launch the generation of the virtual machine
 echo "Generating a virtual machine for MONARC $MONARC_VERSION (commit id: $LATEST_COMMIT)..."
-packer build monarc.json
+./packer build monarc.json
 
 TIME_END=$(date +%s)
 TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})

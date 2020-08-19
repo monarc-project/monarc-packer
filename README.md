@@ -8,7 +8,6 @@
 
 ## Usage
 
-    $ export GITHUB_AUTH_TOKEN=<your-github-auth-token>
     $ ./build_vm.sh
     Retrieving information about latest MONARC release...
     Generating a virtual machine for MONARC v2.7.2 (commit id: 99e80ba03cfba2e270473b42b4fb53dec1d2b8b0)...
