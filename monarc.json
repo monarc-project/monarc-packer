@@ -73,8 +73,7 @@
             "passwd/username={{ user `ssh_username` }} ",
             "-- <enter>"
         ]
-    }
-	],
+    }],
 
     "provisioners": [{
         "type": "shell",
