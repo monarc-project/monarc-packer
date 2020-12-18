@@ -17,7 +17,7 @@ DBPASSWORD_MONARC="$(openssl rand -hex 32)"
 
 
 # Stats service
-STATS_PATH='/home/vagrant/stats-service'
+STATS_PATH='/var/lib/monarc/stats-service'
 STATS_HOST='0.0.0.0'
 STATS_PORT='5005'
 STATS_DB_NAME='statsservice'
@@ -31,10 +31,10 @@ TIME_START=$(date +%s)
 
 # php.ini configuration
 upload_max_filesize=200M
-post_max_size=50M
-max_execution_time=100
+post_max_size=200M
+max_execution_time=200
 max_input_time=223
-memory_limit=512M
+memory_limit=1024M
 PHP_INI=/etc/php/7.2/apache2/php.ini
 
 export DEBIAN_FRONTEND=noninteractive
@@ -191,19 +191,21 @@ sudo -u postgres psql -c "CREATE USER $STATS_DB_USER WITH PASSWORD '$STATS_DB_PA
 sudo -u postgres psql -c "ALTER USER $STATS_DB_USER WITH SUPERUSER;"
 
 cd ~
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-echo  'export PATH="$PATH:$HOME/.poetry/bin"' >> ~/.bashrc
-echo  'export FLASK_APP=runserver.py' >> ~/.bashrc
-echo  'export STATS_CONFIG=production.py' >> ~/.bashrc
-source ~/.bashrc
-source $HOME/.poetry/env
+sudo -u monarc curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+sudo -u monarc echo 'export PATH="$PATH:$HOME/.poetry/bin"' >> ~/.bashrc
+sudo -u monarc echo 'export FLASK_APP=runserver.py' >> ~/.bashrc
+sudo -u monarc echo 'export STATS_CONFIG=production.py' >> ~/.bashrc
+sudo -u monarc bash -c 'source ~/.bashrc'
+sudo -u monarc bash -c 'source $HOME/.poetry/env'
 
-git clone https://github.com/monarc-project/stats-service $STATS_PATH
+sudo mkdir -p $STATS_PATH
+sudo chown monarc:monarc $STATS_PATH
+sudo -u monarc git clone https://github.com/monarc-project/stats-service $STATS_PATH
 cd $STATS_PATH
-npm install
-poetry install --no-dev
+sudo npm install
+sudo poetry install --no-dev
 
-bash -c "cat << EOF > $STATS_PATH/instance/production.py
+sudo -u monarc cat > $STATS_PATH/instance/production.py <<EOF
 HOST = '$STATS_HOST'
 PORT = $STATS_PORT
 DEBUG = False
@@ -232,7 +234,7 @@ SECRET_KEY = '$STATS_SECRET_KEY'
 LOG_PATH = './var/stats.log'
 
 MOSP_URL = 'https://objects.monarc.lu'
-EOF"
+EOF
 
 export FLASK_APP=runserver.py
 export STATS_CONFIG=production.py
