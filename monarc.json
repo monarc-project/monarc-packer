@@ -82,8 +82,7 @@
         " -- <wait>",
         "<enter><wait>"
       ]
-    }
-	],
+    }],
 
     "provisioners": [{
         "type": "shell",

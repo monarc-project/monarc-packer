@@ -15,6 +15,17 @@ DBPASSWORD_ADMIN="$(openssl rand -hex 32)"
 DBUSER_MONARC='sqlmonarcuser'
 DBPASSWORD_MONARC="$(openssl rand -hex 32)"
 
+
+# Stats service
+STATS_PATH='/home/vagrant/stats-service'
+STATS_HOST='0.0.0.0'
+STATS_PORT='5005'
+STATS_DB_NAME='statsservice'
+STATS_DB_USER='sqlmonarcuser'
+STATS_DB_PASSWORD="sqlmonarcuser"
+STATS_SECRET_KEY="$(openssl rand -hex 32)"
+
+
 # Timing creation
 TIME_START=$(date +%s)
 
@@ -78,12 +89,13 @@ sudo apt-get purge -y expect > /dev/null 2>&1
 
 
 echo "--- Installing PHP-specific packages… ---"
-sudo apt-get -y install php apache2 libapache2-mod-php php-curl php-gd php-mysql php-pear php-apcu php-xml php-mbstring php-intl php-imagick php-zip > /dev/null
+sudo apt-get -y install php apache2 libapache2-mod-php php-curl php-gd php-mysql php-pear php-apcu php-xml php-mbstring php-intl php-imagick php-zip php-xdebug php-bcmath > /dev/null
 
 
 php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-php -r "if (hash_file('sha384', 'composer-setup.php') === 'e5325b19b381bfd88ce90a5ddb7823406b2a38cff6bb704b0acc289a09c8128d4a8ce2bbafcd1fcbdc38666422fe2806') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
 php composer-setup.php --install-dir=/tmp --filename=composer
+php -r "unlink('composer-setup.php');"
 mv /tmp/composer /usr/local/bin/composer
 
 
@@ -170,67 +182,152 @@ sudo bash -c "cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
 EOF"
 
 
+
+echo -e "\n--- Installing the stats service… ---\n"
+sudo apt-get -y install postgresql python3-pip python3-venv
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 10
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 20
+sudo -u postgres psql -c "CREATE USER $STATS_DB_USER WITH PASSWORD '$STATS_DB_PASSWORD';"
+sudo -u postgres psql -c "ALTER USER $STATS_DB_USER WITH SUPERUSER;"
+
+cd ~
+curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+echo  'export PATH="$PATH:$HOME/.poetry/bin"' >> ~/.bashrc
+echo  'export FLASK_APP=runserver.py' >> ~/.bashrc
+echo  'export STATS_CONFIG=production.py' >> ~/.bashrc
+source ~/.bashrc
+source $HOME/.poetry/env
+
+git clone https://github.com/monarc-project/stats-service $STATS_PATH
+cd $STATS_PATH
+npm install
+poetry install --no-dev
+
+bash -c "cat << EOF > $STATS_PATH/instance/production.py
+HOST = '$STATS_HOST'
+PORT = $STATS_PORT
+DEBUG = False
+TESTING = False
+INSTANCE_URL = 'http://127.0.0.1:$STATS_PORT'
+
+ADMIN_EMAIL = 'info@cases.lu'
+ADMIN_URL = 'https://www.cases.lu'
+
+REMOTE_STATS_SERVER = 'https://dashboard.monarc.lu'
+
+DB_CONFIG_DICT = {
+    'user': '$STATS_DB_USER',
+    'password': '$STATS_DB_PASSWORD',
+    'host': 'localhost',
+    'port': 5432,
+}
+DATABASE_NAME = '$STATS_DB_NAME'
+SQLALCHEMY_DATABASE_URI = 'postgres://{user}:{password}@{host}:{port}/{name}'.format(
+    name=DATABASE_NAME, **DB_CONFIG_DICT
+)
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+SECRET_KEY = '$STATS_SECRET_KEY'
+
+LOG_PATH = './var/stats.log'
+
+MOSP_URL = 'https://objects.monarc.lu'
+EOF"
+
+export FLASK_APP=runserver.py
+export STATS_CONFIG=production.py
+
+FLASK_APP=runserver.py poetry run flask db_create
+FLASK_APP=runserver.py poetry run flask db_init
+FLASK_APP=runserver.py poetry run flask client_create --name ADMIN --role admin
+
+
+sudo bash -c "cat << EOF > /etc/systemd/system/statsservice.service
+[Unit]
+Description=MONARC Stats service
+After=network.target
+
+[Service]
+User=vagrant
+Environment=LANG=en_US.UTF-8
+Environment=LC_ALL=en_US.UTF-8
+Environment=FLASK_APP=runserver.py
+Environment=FLASK_ENV=production
+Environment=STATS_CONFIG=production.py
+Environment=FLASK_RUN_HOST=$STATS_HOST
+Environment=FLASK_RUN_PORT=$STATS_PORT
+WorkingDirectory=$STATS_PATH
+ExecStart=/home/vagrant/.poetry/bin/poetry run flask run
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF"
+
+sudo systemctl daemon-reload > /dev/null
+sleep 1
+sudo systemctl enable statsservice.service > /dev/null
+sleep 3
+sudo systemctl restart statsservice > /dev/null
+#systemctl status statsservice.service
+
+# Create a new client and set the apiKey.
+cd $STATS_PATH ; apiKey=$(poetry run flask client_create --name admin_localhost | sed -nr 's/Token: (.*)$/\1/p')
+cd $PATH_TO_MONARC
+
+
 echo "--- Configuration of MONARC data base connection… ---"
 cd $PATH_TO_MONARC
 sudo -u monarc cat > config/autoload/local.php <<EOF
 <?php
 \$package_json = json_decode(file_get_contents('./package.json'), true);
 
-return array(
-    'doctrine' => array(
-        'connection' => array(
-            'orm_default' => array(
-                'params' => array(
+return [
+    'doctrine' => [
+        'connection' => [
+            'orm_default' => [
+                'params' => [
                     'host' => '$DBHOST',
                     'user' => '$DBUSER_MONARC',
                     'password' => '$DBPASSWORD_MONARC',
                     'dbname' => '$DBNAME_COMMON',
-                ),
-            ),
-            'orm_cli' => array(
-                'params' => array(
+                ],
+            ],
+            'orm_cli' => [
+                'params' => [
                     'host' => '$DBHOST',
                     'user' => '$DBUSER_MONARC',
                     'password' => '$DBPASSWORD_MONARC',
                     'dbname' => '$DBNAME_CLI',
-                    ),
-                ),
-            ),
-        ),
+                ],
+            ],
+        ],
+    ],
 
-    /* Link with (ModuleCore)
-    config['languages'] = [
-        'fr' => array(
-            'index' => 1,
-            'label' => 'Français'
-        ),
-        'en' => array(
-            'index' => 2,
-            'label' => 'English'
-        ),
-        'de' => array(
-            'index' => 3,
-            'label' => 'Deutsch'
-        ),
-    ]
-    */
-    'activeLanguages' => array('fr','en','de','nl',),
+    'activeLanguages' => ['fr','en','de','nl'],
 
     'appVersion' => \$package_json['version'],
 
-    'checkVersion' => true,
+    'checkVersion' => false,
     'appCheckingURL' => 'https://version.monarc.lu/check/MONARC',
 
     'email' => [
-            'name' => 'MONARC',
-            'from' => 'info@monarc.lu',
+        'name' => 'MONARC',
+        'from' => 'info@monarc.lu',
     ],
 
-    'monarc' => array(
+    'mospApiUrl' => 'https://objects.monarc.lu/api/v1/',
+
+    'monarc' => [
         'ttl' => 60, // timeout
-        'salt' => '', // private salt for password
-    ),
-);
+        'salt' => '', // private salt for password encryption
+    ],
+
+    'statsApi' => [
+        'baseUrl' => 'http://127.0.0.1:$STATS_PORT',
+        'apiKey' => '$apiKey',
+    ],
+];
 EOF
 
 sudo mkdir -p $PATH_TO_MONARC/data/cache
@@ -267,6 +364,13 @@ sudo systemctl restart apache2.service > /dev/null
 
 TIME_END=$(date +%s)
 TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
+
+
+echo "--- Create a collect-stats run every day. ---"
+sudo bash -c "cat > /etc/cron.daily/collect-stats <<EOF
+#!/bin/sh
+php /var/lib/monarc/fo/bin/console monarc:collect-stats
+EOF"
 
 
 echo "--- MONARC is ready! ---"
