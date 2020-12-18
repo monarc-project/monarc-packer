@@ -282,7 +282,6 @@ sudo -u monarc cat > config/autoload/local.php <<EOF
 <?php
 \$package_json = json_decode(file_get_contents('./package.json'), true);
 
-<?php
 return [
     'doctrine' => [
         'connection' => [
@@ -365,6 +364,13 @@ sudo systemctl restart apache2.service > /dev/null
 
 TIME_END=$(date +%s)
 TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
+
+
+echo "--- Create a collect-stats run every day. ---"
+sudo bash -c "cat > /etc/cron.daily/collect-stats <<EOF
+#!/bin/sh
+php /var/lib/monarc/fo/bin/console monarc:collect-stats
+EOF"
 
 
 echo "--- MONARC is ready! ---"
