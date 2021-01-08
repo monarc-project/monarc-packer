@@ -191,16 +191,16 @@ sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
 libreadline-dev libsqlite3-dev wget llvm libncurses5-dev libncursesw5-dev \
 xz-utils tk-dev libffi-dev liblzma-dev python-openssl
 
+
+
 # install a newer version of Python
-sudo -u monarc curl https://pyenv.run -o pyenv.run
-sudo -u monarc bash pyenv.run
-sudo -u monarc rm pyenv.run
-sudo -u monarc echo 'export PATH="/home/monarc/.pyenv/bin:$PATH"' >> /home/monarc/.bashrc
-sudo -u monarc echo 'eval "$(pyenv init -)"' >> /home/monarc/.bashrc
-sudo -u monarc echo 'eval "$(pyenv virtualenv-init -)"' >> /home/monarc/.bashrc
-sudo -u monarc bash -c 'source /home/monarc/.bashrc'
-sudo -u monarc pyenv install 3.9.1
-sudo -u monarc pyenv global 3.9.1
+curl https://pyenv.run | bash
+echo 'export PATH="/home/monarc/.pyenv/bin:$PATH"' >> /home/monarc/.bashrc
+echo 'eval "$(pyenv init -)"' >> /home/monarc/.bashrc
+echo 'eval "$(pyenv virtualenv-init -)"' >> /home/monarc/.bashrc
+bash -c 'source /home/monarc/.bashrc'
+pyenv install 3.9.1
+pyenv global 3.9.1
 
 sudo apt-get -y install postgresql
 sudo -u postgres psql -c "CREATE USER $STATS_DB_USER WITH PASSWORD '$STATS_DB_PASSWORD';"
@@ -209,19 +209,19 @@ sudo -u postgres psql -c "ALTER USER $STATS_DB_USER WITH SUPERUSER;"
 cd ~
 sudo -u monarc curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -o get-poetry.py
 sudo -u monarc python get-poetry.py
-sudo -u rm get-poetry.py
-sudo -u monarc echo 'export PATH="$PATH:$HOME/.poetry/bin"' >> ~/.bashrc
-sudo -u monarc echo 'export FLASK_APP=runserver.py' >> ~/.bashrc
-sudo -u monarc echo 'export STATS_CONFIG=production.py' >> ~/.bashrc
-sudo -u monarc bash -c 'source ~/.bashrc'
-sudo -u monarc bash -c 'source $HOME/.poetry/env'
+sudo -u monarc rm get-poetry.py
+echo 'export PATH="$PATH:$HOME/.poetry/bin"' >> ~/.bashrc
+echo 'export FLASK_APP=runserver.py' >> ~/.bashrc
+echo 'export STATS_CONFIG=production.py' >> ~/.bashrc
+bash -c 'source ~/.bashrc'
+bash -c 'source $HOME/.poetry/env'
 
 sudo mkdir -p $STATS_PATH
 sudo chown monarc:monarc $STATS_PATH
 sudo -u monarc git clone https://github.com/monarc-project/stats-service $STATS_PATH
 cd $STATS_PATH
-sudo  -u monarc npm install
-sudo  -u monarc poetry install --no-dev
+npm install
+sudo -u monarc poetry install --no-dev
 
 sudo -u monarc cat > $STATS_PATH/instance/production.py <<EOF
 HOST = '$STATS_HOST'
