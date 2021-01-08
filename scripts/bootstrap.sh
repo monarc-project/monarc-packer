@@ -184,6 +184,8 @@ EOF"
 
 
 echo -e "\n--- Installing the stats service… ---\n"
+# see up-to-date processe here:
+# https://github.com/monarc-project/stats-service/blob/master/contrib/install.sh
 sudo apt-get -y install postgresql python3-pip python3-venv
 sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 10
 sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 20
@@ -191,7 +193,9 @@ sudo -u postgres psql -c "CREATE USER $STATS_DB_USER WITH PASSWORD '$STATS_DB_PA
 sudo -u postgres psql -c "ALTER USER $STATS_DB_USER WITH SUPERUSER;"
 
 cd ~
-sudo -u monarc curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+sudo -u monarc curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -o get-poetry.py
+sudo -u monarc python get-poetry.py
+sudo -u rm get-poetry.py
 sudo -u monarc echo 'export PATH="$PATH:$HOME/.poetry/bin"' >> ~/.bashrc
 sudo -u monarc echo 'export FLASK_APP=runserver.py' >> ~/.bashrc
 sudo -u monarc echo 'export STATS_CONFIG=production.py' >> ~/.bashrc
@@ -202,8 +206,8 @@ sudo mkdir -p $STATS_PATH
 sudo chown monarc:monarc $STATS_PATH
 sudo -u monarc git clone https://github.com/monarc-project/stats-service $STATS_PATH
 cd $STATS_PATH
-sudo npm install
-sudo poetry install --no-dev
+sudo  -u monarc npm install
+sudo  -u monarc poetry install --no-dev
 
 sudo -u monarc cat > $STATS_PATH/instance/production.py <<EOF
 HOST = '$STATS_HOST'
@@ -250,7 +254,7 @@ Description=MONARC Stats service
 After=network.target
 
 [Service]
-User=vagrant
+User=monarc
 Environment=LANG=en_US.UTF-8
 Environment=LC_ALL=en_US.UTF-8
 Environment=FLASK_APP=runserver.py
@@ -259,7 +263,7 @@ Environment=STATS_CONFIG=production.py
 Environment=FLASK_RUN_HOST=$STATS_HOST
 Environment=FLASK_RUN_PORT=$STATS_PORT
 WorkingDirectory=$STATS_PATH
-ExecStart=/home/vagrant/.poetry/bin/poetry run flask run
+ExecStart=/home/monarc/.poetry/bin/poetry run flask run
 Restart=always
 
 [Install]
@@ -348,7 +352,7 @@ sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-b
 
 
 echo "--- Installation Node, NPM and Grunt… ---"
-curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -
+curl -sL https://deb.nodesource.com/setup_15.x | sudo bash -
 sudo apt-get install -y nodejs
 sudo npm install -g grunt-cli
 
@@ -364,9 +368,6 @@ sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx seed:run -c ./module/Mon
 echo "--- Restarting Apache… ---"
 sudo systemctl restart apache2.service > /dev/null
 
-TIME_END=$(date +%s)
-TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
-
 
 echo "--- Create a collect-stats run every day. ---"
 sudo bash -c "cat > /etc/cron.daily/collect-stats <<EOF
@@ -375,12 +376,14 @@ php /var/lib/monarc/fo/bin/console monarc:collect-stats
 EOF"
 
 
+TIME_END=$(date +%s)
+TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
+
 echo "--- MONARC is ready! ---"
 echo "Login and passwords for the MONARC image are the following:"
 echo "MONARC application: admin@admin.localhost:admin"
 echo "SSH login: monarc:password"
 echo "Mysql root login: $DBUSER_ADMIN:$DBPASSWORD_ADMIN"
 echo "Mysql MONARC login: $DBUSER_MONARC:$DBPASSWORD_MONARC"
-
 
 echo "The generation took ${TIME_DELTA} seconds"
