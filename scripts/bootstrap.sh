@@ -186,9 +186,23 @@ EOF"
 echo -e "\n--- Installing the stats service… ---\n"
 # see up-to-date processe here:
 # https://github.com/monarc-project/stats-service/blob/master/contrib/install.sh
-sudo apt-get -y install postgresql python3-pip python3-venv
-sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 10
-sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 20
+
+sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
+libreadline-dev libsqlite3-dev wget llvm libncurses5-dev libncursesw5-dev \
+xz-utils tk-dev libffi-dev liblzma-dev python-openssl
+
+# install a newer version of Python
+sudo -u monarc curl https://pyenv.run -o pyenv.run
+sudo -u monarc bash pyenv.run
+sudo -u monarc rm pyenv.run
+sudo -u monarc echo 'export PATH="/home/monarc/.pyenv/bin:$PATH"' >> /home/monarc/.bashrc
+sudo -u monarc echo 'eval "$(pyenv init -)"' >> /home/monarc/.bashrc
+sudo -u monarc echo 'eval "$(pyenv virtualenv-init -)"' >> /home/monarc/.bashrc
+sudo -u monarc bash -c 'source /home/monarc/.bashrc'
+sudo -u monarc pyenv install 3.9.1
+sudo -u monarc pyenv global 3.9.1
+
+sudo apt-get -y install postgresql
 sudo -u postgres psql -c "CREATE USER $STATS_DB_USER WITH PASSWORD '$STATS_DB_PASSWORD';"
 sudo -u postgres psql -c "ALTER USER $STATS_DB_USER WITH SUPERUSER;"
 
