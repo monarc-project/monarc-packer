@@ -1,96 +1,109 @@
 {
-    "variables": {
-        "boot_command_prefix": "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
-        "preseed": "preseed.cfg",
-        "ssh_fullname": "monarc",
-        "ssh_name": "monarc",
-        "ssh_pass": "password",
-        "hostname": "monarc",
-
-        "vm_name": "MONARC",
-        "vm_description": "MONARC - Method for an Optimised aNAlysis of Risks by CASES.",
-        "vm_version": "{{env `MONARC_VERSION`}}",
-
-        "latest_commit": "{{env `LATEST_COMMIT`}}",
-
-        "disk_size": "50000",
-        "cpus": "2",
-        "memory": "4096",
-        "vram": "32"
-    },
-
-    "builders": [{
-        "type": "virtualbox-iso",
-        "guest_os_type": "Ubuntu_64",
-        "format": "ova",
-        "vm_name": "{{user `vm_name`}}_{{user `vm_version`}}_{{user `latest_commit`}}",
-
-        "export_opts": [
-            "--manifest",
-            "--vsys", "0",
-            "--eulafile", "/tmp/LICENSE-MONARC",
-            "--description", "{{user `vm_description`}}",
-            "--version", "{{user `vm_version`}}"
+  "builders": [
+    {
+      "boot_command": [
+        "{{ user `boot_command_prefix` }}",
+        "/install/vmlinuz noapic ",
+        "initrd=/install/initrd.gz ",
+        "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
+        "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+        "hostname={{ user `hostname` }} ",
+        "grub-installer/bootdev=/dev/sda<wait> ",
+        "fb=false debconf/frontend=noninteractive ",
+        "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+        "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+        "passwd/user-fullname={{ user `ssh_fullname` }} ",
+        "passwd/user-password={{ user `ssh_password` }} ",
+        "passwd/user-password-again={{ user `ssh_password` }} ",
+        "passwd/username={{ user `ssh_username` }} ",
+        "-- <enter>"
+      ],
+      "disk_size": "{{user `disk_size`}}",
+      "export_opts": [
+        "--manifest",
+        "--vsys",
+        "0",
+        "--eulafile",
+        "/tmp/LICENSE-MONARC",
+        "--description",
+        "{{user `vm_description`}}",
+        "--version",
+        "{{user `vm_version`}}"
+      ],
+      "format": "ova",
+      "guest_os_type": "Ubuntu_64",
+      "http_directory": "preseeds",
+      "http_port_max": 9011,
+      "http_port_min": 9001,
+      "iso_checksum": "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996",
+      "iso_url": "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso",
+      "shutdown_command": "echo {{user `ssh_pass`}} | sudo -S shutdown -P now",
+      "ssh_password": "{{user `ssh_pass`}}",
+      "ssh_pty": "true",
+      "ssh_timeout": "20m",
+      "ssh_username": "{{user `ssh_name`}}",
+      "type": "virtualbox-iso",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--vram",
+          "{{user `vram`}}"
         ],
-
-        "vboxmanage": [
-            ["modifyvm", "{{.Name}}", "--vram", "{{user `vram`}}"],
-            ["modifyvm", "{{.Name}}", "--memory", "{{user `memory`}}"],
-            ["modifyvm", "{{.Name}}", "--cpus", "{{user `cpus`}}"]
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "{{user `memory`}}"
         ],
-
-        "disk_size": "{{user `disk_size`}}",
-
-        "iso_url": "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso",
-        "iso_checksum": "8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996",
-        "iso_checksum_type": "sha256",
-
-        "http_directory" : "preseeds",
-        "http_port_min" : 9001,
-        "http_port_max" : 9011,
-
-        "ssh_username": "{{user `ssh_name`}}",
-        "ssh_password": "{{user `ssh_pass`}}",
-        "ssh_wait_timeout": "20m",
-        "ssh_pty" : "true",
-
-        "shutdown_command": "echo {{user `ssh_pass`}} | sudo -S shutdown -P now",
-
-        "boot_command": [
-            "{{ user `boot_command_prefix` }}",
-            "/install/vmlinuz noapic ",
-            "initrd=/install/initrd.gz ",
-            "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
-            "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
-            "hostname={{ user `hostname` }} ",
-            "grub-installer/bootdev=/dev/sda<wait> ",
-            "fb=false debconf/frontend=noninteractive ",
-            "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
-            "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
-            "passwd/user-fullname={{ user `ssh_fullname` }} ",
-            "passwd/user-password={{ user `ssh_password` }} ",
-            "passwd/user-password-again={{ user `ssh_password` }} ",
-            "passwd/username={{ user `ssh_username` }} ",
-            "-- <enter>"
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "{{user `cpus`}}"
         ]
-    }],
-
-    "provisioners": [{
-        "type": "shell",
-        "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
-        "inline": [
-            "echo '%sudo    ALL=(ALL)  NOPASSWD:ALL' >> /etc/sudoers"
-        ]
+      ],
+      "vm_name": "{{user `vm_name`}}_{{user `vm_version`}}_{{user `latest_commit`}}"
+    }
+  ],
+  "post-processors": [
+    {
+      "checksum_types": [
+        "sha1",
+        "sha512"
+      ],
+      "type": "checksum"
+    }
+  ],
+  "provisioners": [
+    {
+      "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
+      "inline": [
+        "echo '%sudo    ALL=(ALL)  NOPASSWD:ALL' >> /etc/sudoers"
+      ],
+      "type": "shell"
     },
     {
-        "type": "shell",
-        "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
-        "script": "scripts/bootstrap.sh",
-        "pause_before": "10s"
-    }],
-
-    "post-processors":[{
-        "type": "checksum",
-        "checksum_types": ["sha1", "sha512"]
-    }]
+      "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
+      "pause_before": "10s",
+      "script": "scripts/bootstrap.sh",
+      "type": "shell"
+    }
+  ],
+  "variables": {
+    "boot_command_prefix": "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+    "cpus": "2",
+    "disk_size": "50000",
+    "hostname": "monarc",
+    "latest_commit": "{{env `LATEST_COMMIT`}}",
+    "memory": "4096",
+    "preseed": "preseed.cfg",
+    "ssh_fullname": "monarc",
+    "ssh_name": "monarc",
+    "ssh_pass": "password",
+    "vm_description": "MONARC - Method for an Optimised aNAlysis of Risks by CASES.",
+    "vm_name": "MONARC",
+    "vm_version": "{{env `MONARC_VERSION`}}",
+    "vram": "32"
+  }
 }

@@ -17,7 +17,7 @@ DBPASSWORD_MONARC="$(openssl rand -hex 32)"
 
 
 # Stats service
-STATS_PATH='/var/lib/monarc/stats-service'
+STATS_PATH='/home/monarc/stats-service'
 STATS_HOST='0.0.0.0'
 STATS_PORT='5005'
 STATS_DB_NAME='statsservice'
@@ -192,36 +192,36 @@ libreadline-dev libsqlite3-dev wget llvm libncurses5-dev libncursesw5-dev \
 xz-utils tk-dev libffi-dev liblzma-dev python-openssl
 
 
-
 # install a newer version of Python
 curl https://pyenv.run | bash
 echo 'export PATH="/home/monarc/.pyenv/bin:$PATH"' >> /home/monarc/.bashrc
 echo 'eval "$(pyenv init -)"' >> /home/monarc/.bashrc
 echo 'eval "$(pyenv virtualenv-init -)"' >> /home/monarc/.bashrc
 bash -c 'source /home/monarc/.bashrc'
-pyenv install 3.9.1
-pyenv global 3.9.1
+pyenv install 3.9.2
+pyenv global 3.9.2
 
 sudo apt-get -y install postgresql
 sudo -u postgres psql -c "CREATE USER $STATS_DB_USER WITH PASSWORD '$STATS_DB_PASSWORD';"
 sudo -u postgres psql -c "ALTER USER $STATS_DB_USER WITH SUPERUSER;"
 
 cd ~
-sudo -u monarc curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -o get-poetry.py
-sudo -u monarc python get-poetry.py
-sudo -u monarc rm get-poetry.py
+curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -o get-poetry.py
+python get-poetry.py
+rm get-poetry.py
 echo 'export PATH="$PATH:$HOME/.poetry/bin"' >> ~/.bashrc
 echo 'export FLASK_APP=runserver.py' >> ~/.bashrc
 echo 'export STATS_CONFIG=production.py' >> ~/.bashrc
 bash -c 'source ~/.bashrc'
 bash -c 'source $HOME/.poetry/env'
+sudo chown -R monarc:monarc /home/monarc/.poetry # weird...
 
 sudo mkdir -p $STATS_PATH
 sudo chown monarc:monarc $STATS_PATH
-sudo -u monarc git clone https://github.com/monarc-project/stats-service $STATS_PATH
+git clone https://github.com/monarc-project/stats-service $STATS_PATH
 cd $STATS_PATH
 npm install
-sudo -u monarc poetry install --no-dev
+poetry install --no-dev
 
 sudo -u monarc cat > $STATS_PATH/instance/production.py <<EOF
 HOST = '$STATS_HOST'
@@ -277,7 +277,7 @@ Environment=STATS_CONFIG=production.py
 Environment=FLASK_RUN_HOST=$STATS_HOST
 Environment=FLASK_RUN_PORT=$STATS_PORT
 WorkingDirectory=$STATS_PATH
-ExecStart=/home/monarc/.poetry/bin/poetry run flask run
+ExecStart=/home/monarc/.pyenv/shims/python /home/monarc/.poetry/bin/poetry run flask run
 Restart=always
 
 [Install]
