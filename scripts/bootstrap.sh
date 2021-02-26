@@ -17,6 +17,7 @@ DBPASSWORD_MONARC="$(openssl rand -hex 32)"
 
 
 # Stats service
+PYTHON_VERSION='3.9.2'
 STATS_PATH='/home/monarc/stats-service'
 STATS_HOST='0.0.0.0'
 STATS_PORT='5005'
@@ -212,8 +213,8 @@ sudo -u monarc echo 'eval "$(pyenv init -)"' >> /home/monarc/.bashrc
 sudo -u monarc echo 'eval "$(pyenv virtualenv-init -)"' >> /home/monarc/.bashrc
 sudo -u monarc bash -c 'source /home/monarc/.bashrc'
 bash -c 'source /home/monarc/.bashrc'
-pyenv install 3.9.2
-pyenv global 3.9.2
+pyenv install $PYTHON_VERSION
+pyenv global $PYTHON_VERSION
 
 sudo apt-get -y install postgresql
 sudo -u postgres psql -c "CREATE USER $STATS_DB_USER WITH PASSWORD '$STATS_DB_PASSWORD';"
@@ -240,7 +241,7 @@ sudo chown monarc:monarc $STATS_PATH
 git clone https://github.com/monarc-project/stats-service $STATS_PATH
 sudo chown -R monarc:monarc $STATS_PATH
 cd $STATS_PATH
-npm install
+sudo -u monarc npm install
 poetry install --no-dev
 
 sudo -u monarc cat > $STATS_PATH/instance/production.py <<EOF
@@ -405,7 +406,7 @@ sudo systemctl restart apache2.service > /dev/null
 echo "--- Create a collect-stats run every day. ---"
 sudo bash -c "cat > /etc/cron.daily/collect-stats <<EOF
 #!/bin/sh
-php /var/lib/monarc/fo/bin/console monarc:collect-stats
+cd /var/lib/monarc/fo/ ; php /var/lib/monarc/fo/bin/console monarc:collect-stats
 EOF"
 
 
