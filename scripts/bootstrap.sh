@@ -198,6 +198,7 @@ echo 'export PATH="/home/monarc/.pyenv/bin:$PATH"' >> /home/monarc/.bashrc
 echo 'eval "$(pyenv init -)"' >> /home/monarc/.bashrc
 echo 'eval "$(pyenv virtualenv-init -)"' >> /home/monarc/.bashrc
 bash -c 'source /home/monarc/.bashrc'
+sudo chown -R monarc:monarc /home/monarc/.pyenv
 pyenv install 3.9.2
 pyenv global 3.9.2
 
@@ -219,6 +220,7 @@ sudo chown -R monarc:monarc /home/monarc/.poetry # weird...
 sudo mkdir -p $STATS_PATH
 sudo chown monarc:monarc $STATS_PATH
 git clone https://github.com/monarc-project/stats-service $STATS_PATH
+sudo chown -R monarc:monarc $STATS_PATH
 cd $STATS_PATH
 npm install
 poetry install --no-dev
