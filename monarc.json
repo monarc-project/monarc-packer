@@ -3,7 +3,7 @@
     {
       "boot_command": [
         "{{ user `boot_command_prefix` }}",
-        "/install/vmlinuz noapic ",
+        "/install/vmlinuz<wait> noapic ",
         "initrd=/install/initrd.gz ",
         "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
         "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
