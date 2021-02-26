@@ -182,6 +182,12 @@ sudo bash -c "cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
 EOF"
 
 
+echo "--- Installation Node, NPM and Grunt… ---"
+curl -sL https://deb.nodesource.com/setup_15.x | sudo bash -
+sudo apt-get install -y nodejs
+sudo npm install -g grunt-cli
+sudo npm install -g node-gyp
+
 
 echo -e "\n--- Installing the stats service… ---\n"
 # see up-to-date processe here:
@@ -194,11 +200,18 @@ xz-utils tk-dev libffi-dev liblzma-dev python-openssl
 
 # install a newer version of Python
 curl https://pyenv.run | bash
-echo 'export PATH="/home/monarc/.pyenv/bin:$PATH"' >> /home/monarc/.bashrc
-echo 'eval "$(pyenv init -)"' >> /home/monarc/.bashrc
-echo 'eval "$(pyenv virtualenv-init -)"' >> /home/monarc/.bashrc
-bash -c 'source /home/monarc/.bashrc'
 sudo chown -R monarc:monarc /home/monarc/.pyenv
+sudo chmod -R 777 /home/monarc/.pyenv # prevents 'pyenv: cannot rehash: /home/monarc/.pyenv/shims isn't writable'
+
+export PATH="/home/monarc/.pyenv/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+sudo -u monarc echo 'export PATH="/home/monarc/.pyenv/bin:$PATH"' >> /home/monarc/.bashrc
+sudo -u monarc echo 'eval "$(pyenv init -)"' >> /home/monarc/.bashrc
+sudo -u monarc echo 'eval "$(pyenv virtualenv-init -)"' >> /home/monarc/.bashrc
+sudo -u monarc bash -c 'source /home/monarc/.bashrc'
+bash -c 'source /home/monarc/.bashrc'
 pyenv install 3.9.2
 pyenv global 3.9.2
 
@@ -206,16 +219,21 @@ sudo apt-get -y install postgresql
 sudo -u postgres psql -c "CREATE USER $STATS_DB_USER WITH PASSWORD '$STATS_DB_PASSWORD';"
 sudo -u postgres psql -c "ALTER USER $STATS_DB_USER WITH SUPERUSER;"
 
+
 cd ~
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -o get-poetry.py
 python get-poetry.py
+sudo chown -R monarc:monarc /home/monarc/.poetry
 rm get-poetry.py
+export FLASK_APP=runserver.py
+export PATH="$PATH:$HOME/.poetry/bin"
+export STATS_CONFIG=production.py
 echo 'export PATH="$PATH:$HOME/.poetry/bin"' >> ~/.bashrc
 echo 'export FLASK_APP=runserver.py' >> ~/.bashrc
 echo 'export STATS_CONFIG=production.py' >> ~/.bashrc
-bash -c 'source ~/.bashrc'
+bash -c 'source /home/monarc/.bashrc'
 bash -c 'source $HOME/.poetry/env'
-sudo chown -R monarc:monarc /home/monarc/.poetry # weird...
+
 
 sudo mkdir -p $STATS_PATH
 sudo chown monarc:monarc $STATS_PATH
@@ -255,6 +273,11 @@ LOG_PATH = './var/stats.log'
 
 MOSP_URL = 'https://objects.monarc.lu'
 EOF
+
+mkdir var
+touch var/stats.log
+sudo chown monarc:monarc var/stats.log
+sudo chmod 777 var/stats.log
 
 export FLASK_APP=runserver.py
 export STATS_CONFIG=production.py
@@ -365,12 +388,6 @@ mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC -e "CREATE DATABASE monarc_common D
 echo "--- Populating MONARC DB… ---"
 sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc_structure.sql > /dev/null
 sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc_data.sql > /dev/null
-
-
-echo "--- Installation Node, NPM and Grunt… ---"
-curl -sL https://deb.nodesource.com/setup_15.x | sudo bash -
-sudo apt-get install -y nodejs
-sudo npm install -g grunt-cli
 
 
 echo "--- Update the project… ---"
