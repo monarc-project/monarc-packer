@@ -42,8 +42,7 @@
         "disk_size": "{{user `disk_size`}}",
 
         "iso_url": "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso",
-        "iso_checksum": "8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996",
-        "iso_checksum_type": "sha256",
+        "iso_checksum": "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996",
 
         "http_directory" : "preseeds",
         "http_port_min" : 9001,
@@ -51,7 +50,7 @@
 
         "ssh_username": "{{user `ssh_name`}}",
         "ssh_password": "{{user `ssh_pass`}}",
-        "ssh_wait_timeout": "20m",
+        "ssh_timeout": "20m",
         "ssh_pty" : "true",
 
         "shutdown_command": "echo {{user `ssh_pass`}} | sudo -S shutdown -P now",
