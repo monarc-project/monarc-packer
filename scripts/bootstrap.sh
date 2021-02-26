@@ -183,7 +183,7 @@ EOF"
 
 
 echo "--- Installation Node, NPM and Grunt… ---"
-curl -sL https://deb.nodesource.com/setup_15.x | sudo bash -
+curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -
 sudo apt-get install -y nodejs
 sudo npm install -g grunt-cli
 sudo npm install -g node-gyp
