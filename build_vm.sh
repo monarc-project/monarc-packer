@@ -17,12 +17,12 @@ wget -q -O /tmp/LICENSE-MONARC https://raw.githubusercontent.com/monarc-project/
 PACKER_LOG=1
 
 # Clean files from the previous build
-rm -Rf output-virtualbox-iso/  2> /dev/null
+rm -Rf output-ubuntu-2004/  2> /dev/null
 rm *.checksum  2> /dev/null
 
 # Launch the generation of the virtual machine
 echo "Generating a virtual machine for MONARC $MONARC_VERSION (commit id: $LATEST_COMMIT)..."
-./packer build monarc.json
+packer build monarc.json
 
 TIME_END=$(date +%s)
 TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})

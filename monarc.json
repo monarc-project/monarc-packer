@@ -1,105 +1,85 @@
 {
-    "variables": {
-        "boot_command_prefix": "<enter><enter><f6><esc><wait> ",
-        "ssh_fullname": "monarc",
-        "ssh_name": "monarc",
-        "ssh_pass": "password",
-        "hostname": "monarc-vm",
+  "variables": {
+    "cpus": "2",
+    "disk_size": "50000",
+    "hostname": "monarc",
+    "latest_commit": "{{env `LATEST_COMMIT`}}",
+    "memory": "4096",
+    "ssh_fullname": "ubuntu",
+    "ssh_name": "ubuntu",
+    "ssh_pass": "ubuntu",
+    "vm_description": "MONARC - Method for an Optimised aNAlysis of Risks by CASES.",
+    "vm_name": "MONARC",
+    "vm_version": "{{env `MONARC_VERSION`}}",
+    "vram": "32"
+  },
+  "builders": [
+    {
+      "name": "ubuntu-2004",
+      "type": "virtualbox-iso",
+      "format": "ova",
+      "guest_os_type": "Ubuntu_64",
+      "hard_drive_interface": "sata",
 
-        "vm_name": "MONARC",
-        "vm_description": "MONARC - Method for an Optimised aNAlysis of Risks by CASES.",
-        "vm_version": "{{env `MONARC_VERSION`}}",
+      "boot_command": [
+         "<esc><esc><esc>",
+         "<enter><wait>",
+         "/casper/vmlinuz ",
+         "root=/dev/sr0 ",
+         "initrd=/casper/initrd ",
+         "autoinstall ",
+         "ds=nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/",
+         "<enter>"
+      ],
 
-        "latest_commit": "{{env `LATEST_COMMIT`}}",
+     "http_directory": "http",
+     "http_port_max": 9011,
+     "http_port_min": 9001,
 
-        "headless": "false",
-        "disk_size": "50000",
-        "cpus": "2",
-        "memory": "4096",
-        "vram": "32"
-    },
+      "disk_size": "{{user `disk_size`}}",
+      "export_opts": [
+        "--manifest",
+        "--vsys",
+        "0",
+        "--eulafile",
+        "/tmp/LICENSE-MONARC",
+        "--description",
+        "{{user `vm_description`}}",
+        "--version",
+        "{{user `vm_version`}}"
+      ],
 
-    "builders": [{
-        "type": "virtualbox-iso",
-        "guest_os_type": "Ubuntu_64",
-        "format": "ova",
-        "vm_name": "{{user `vm_name`}}_{{user `vm_version`}}_{{user `latest_commit`}}",
+      "iso_url": "https://releases.ubuntu.com/focal/ubuntu-20.04.2-live-server-amd64.iso",
+      "iso_checksum": "sha256:d1f2bf834bbe9bb43faf16f9be992a6f3935e65be0edece1dee2aa6eb1767423",
 
-        "export_opts": [
-            "--manifest",
-            "--vsys", "0",
-            "--eulafile", "/tmp/LICENSE-MONARC",
-            "--description", "{{user `vm_description`}}",
-            "--version", "{{user `vm_version`}}"
-        ],
+      "ssh_password": "{{user `ssh_pass`}}",
+      "ssh_pty": "true",
+      "ssh_timeout": "20m",
+      "ssh_username": "{{user `ssh_name`}}",
+
+      "shutdown_command": "echo {{ user `ssh_pass` }} | sudo -S shutdown -P now",
 
         "vboxmanage": [
             ["modifyvm", "{{.Name}}", "--vram", "{{user `vram`}}"],
             ["modifyvm", "{{.Name}}", "--memory", "{{user `memory`}}"],
             ["modifyvm", "{{.Name}}", "--cpus", "{{user `cpus`}}"]
-        ],
-
-        "disk_size": "{{user `disk_size`}}",
-
-        "iso_url": "http://cdimage.ubuntu.com/ubuntu-legacy-server/releases/20.04/release/ubuntu-20.04-legacy-server-amd64.iso",
-        "iso_checksum": "36f15879bd9dfd061cd588620a164a82972663fdd148cce1f70d57d314c21b73",
-        "iso_checksum_type": "sha256",
-
-        "headless": "{{ user `headless` }}",
-        "http_directory" : "http",
-        "http_port_min" : 9001,
-        "http_port_max" : 9011,
-
-        "ssh_username": "{{user `ssh_name`}}",
-        "ssh_password": "{{user `ssh_pass`}}",
-        "ssh_wait_timeout": "20m",
-        "ssh_pty" : "true",
-
-        "shutdown_command": "echo {{user `ssh_pass`}} | sudo -S shutdown -P now",
-
-        "boot_command": [
-        "<esc><wait>",
-        "<esc><wait>",
-        "<enter><wait>",
-        "/install/vmlinuz",
-        " auto=true",
-        " url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg",
-        " locale=en_US<wait>",
-        " console-setup/ask_detect=false<wait>",
-        " console-setup/layoutcode=us<wait>",
-        " console-setup/modelcode=pc105<wait>",
-        " debconf/frontend=noninteractive<wait>",
-        " debian-installer=en_US<wait>",
-        " fb=false<wait>",
-        " initrd=/install/initrd.gz<wait>",
-        " kbd-chooser/method=us<wait>",
-        " keyboard-configuration/layout=USA<wait>",
-        " keyboard-configuration/variant=USA<wait>",
-        " netcfg/get_domain=vm<wait>",
-        " netcfg/get_hostname=vagrant<wait>",
-        " grub-installer/bootdev=/dev/sda<wait>",
-        " noapic<wait>",
-        " -- <wait>",
-        "<enter><wait>"
-      ]
-    }],
-
-    "provisioners": [{
-        "type": "shell",
-        "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
-        "inline": [
-            "echo '%sudo    ALL=(ALL)  NOPASSWD:ALL' >> /etc/sudoers"
         ]
-    },
+  }],
+  "provisioners": [
     {
-        "type": "shell",
-        "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
-        "script": "scripts/bootstrap.sh",
-        "pause_before": "10s"
-    }],
-
-    "post-processors":[{
-        "type": "checksum",
-        "checksum_types": ["sha1", "sha512"]
-    }]
+      "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
+      "pause_before": "10s",
+      "script": "scripts/bootstrap.sh",
+      "type": "shell"
+    }
+  ],
+  "post-processors": [
+    {
+      "checksum_types": [
+        "sha1",
+        "sha512"
+      ],
+      "type": "checksum"
+    }
+  ]
 }

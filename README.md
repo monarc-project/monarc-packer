@@ -8,9 +8,9 @@
 
 ## Usage
 
-    $ ./build_vm.sh
+    $ ./build_vm.sh 
     Retrieving information about latest MONARC release...
-    Generating a virtual machine for MONARC v2.7.2 (commit id: 99e80ba03cfba2e270473b42b4fb53dec1d2b8b0)...
+    Generating a virtual machine for MONARC v2.10.2 (commit id: 541e45f682d2f27aafbf834413af2c7bda090b47)...
     The generation took 522 seconds
     Do you want to upload the generated virtual machine on GitHub? [y/N] n
     Good bye.

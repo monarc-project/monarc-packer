@@ -17,7 +17,8 @@ DBPASSWORD_MONARC="$(openssl rand -hex 32)"
 
 
 # Stats service
-STATS_PATH='/home/vagrant/stats-service'
+PYTHON_VERSION='3.9.5'
+STATS_PATH='/home/monarc/stats-service'
 STATS_HOST='0.0.0.0'
 STATS_PORT='5005'
 STATS_DB_NAME='statsservice'
@@ -34,7 +35,7 @@ upload_max_filesize=200M
 post_max_size=50M
 max_execution_time=100
 max_input_time=223
-memory_limit=512M
+memory_limit=1024M
 PHP_INI=/etc/php/7.4/apache2/php.ini
 
 export DEBIAN_FRONTEND=noninteractive
@@ -182,6 +183,12 @@ sudo bash -c "cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
 EOF"
 
 
+echo "--- Installation Node, NPM and Grunt… ---"
+curl -sL https://deb.nodesource.com/setup_15.x | sudo bash -
+sudo apt-get install -y nodejs
+sudo npm install -g grunt-cli
+sudo npm install -g node-gyp
+
 
 echo -e "\n--- Installing the stats service… ---\n"
 sudo apt-get -y install postgresql python3-pip python3-venv
@@ -200,7 +207,7 @@ source $HOME/.poetry/env
 
 git clone https://github.com/monarc-project/stats-service $STATS_PATH
 cd $STATS_PATH
-npm install
+sudo -u monarc npm ci
 poetry install --no-dev
 
 bash -c "cat << EOF > $STATS_PATH/instance/production.py
