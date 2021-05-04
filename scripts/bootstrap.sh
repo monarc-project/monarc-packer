@@ -17,7 +17,7 @@ DBPASSWORD_MONARC="$(openssl rand -hex 32)"
 
 
 # Stats service
-PYTHON_VERSION='3.9.2'
+PYTHON_VERSION='3.9.5'
 STATS_PATH='/home/monarc/stats-service'
 STATS_HOST='0.0.0.0'
 STATS_PORT='5005'
@@ -241,7 +241,7 @@ sudo chown monarc:monarc $STATS_PATH
 git clone https://github.com/monarc-project/stats-service $STATS_PATH
 sudo chown -R monarc:monarc $STATS_PATH
 cd $STATS_PATH
-sudo -u monarc npm install
+sudo -u monarc npm ci
 poetry install --no-dev
 
 sudo -u monarc cat > $STATS_PATH/instance/production.py <<EOF
