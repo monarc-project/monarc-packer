@@ -352,14 +352,8 @@ sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-b
 sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc_data.sql > /dev/null
 
 
-echo "--- Installation Node, NPM and Grunt… ---"
-curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -
-sudo apt-get install -y nodejs
-sudo npm install -g grunt-cli
-
-
 echo "--- Update the project… ---"
-sudo -u monarc ./scripts/update-all.sh
+sudo -u monarc ./scripts/update-all.sh -c
 
 
 echo "--- Create initial user and client ---"
