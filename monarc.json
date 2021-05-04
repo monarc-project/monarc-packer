@@ -2,7 +2,7 @@
   "variables": {
     "cpus": "2",
     "disk_size": "50000",
-    "hostname": "monarc",
+    "hostname": "monarc-vm",
     "latest_commit": "{{env `LATEST_COMMIT`}}",
     "memory": "4096",
     "ssh_fullname": "ubuntu",
@@ -59,11 +59,11 @@
 
       "shutdown_command": "echo {{ user `ssh_pass` }} | sudo -S shutdown -P now",
 
-        "vboxmanage": [
-            ["modifyvm", "{{.Name}}", "--vram", "{{user `vram`}}"],
-            ["modifyvm", "{{.Name}}", "--memory", "{{user `memory`}}"],
-            ["modifyvm", "{{.Name}}", "--cpus", "{{user `cpus`}}"]
-        ]
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--vram", "{{user `vram`}}"],
+        ["modifyvm", "{{.Name}}", "--memory", "{{user `memory`}}"],
+        ["modifyvm", "{{.Name}}", "--cpus", "{{user `cpus`}}"]
+      ]
   }],
   "provisioners": [
     {
