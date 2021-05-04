@@ -5,8 +5,6 @@ autoinstall:
     layout: en
     variant: us
   locale: en_US
-  early-commands:
-    - sudo systemctl stop ssh
   apt:
     geoip: true
     preserve_sources_list: true
