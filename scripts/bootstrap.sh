@@ -362,7 +362,7 @@ return [
         'from' => 'info@monarc.lu',
     ],
 
-    'mospApiUrl' => 'https://objects.monarc.lu/api/v1/',
+    'mospApiUrl' => 'https://objects.monarc.lu/api/',
 
     'monarc' => [
         'ttl' => 60, // timeout
@@ -406,7 +406,7 @@ sudo systemctl restart apache2.service > /dev/null
 echo "--- Create a collect-stats run every day. ---"
 sudo bash -c "cat > /etc/cron.daily/collect-stats <<EOF
 #!/bin/sh
-cd /var/lib/monarc/fo/ ; php /var/lib/monarc/fo/bin/console monarc:collect-stats
+cd /var/lib/monarc/fo/ ; php bin/console monarc:collect-stats
 EOF"
 
 
