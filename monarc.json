@@ -21,15 +21,11 @@
       "guest_os_type": "Ubuntu_64",
       "hard_drive_interface": "sata",
 
+      "boot_wait": "5s",
       "boot_command": [
-         "<esc><esc><esc>",
-         "<enter><wait>",
-         "/casper/vmlinuz ",
-         "root=/dev/sr0 ",
-         "initrd=/casper/initrd ",
-         "autoinstall ",
-         "ds=nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/",
-         "<enter>"
+        "<enter><enter><f6><esc><wait> ",
+        "autoinstall ds=nocloud-net;seedfrom=http://{{ .HTTPIP }}:{{ .HTTPPort }}/",
+        "<enter><wait>"
       ],
 
      "http_directory": "http",
@@ -57,7 +53,7 @@
       "ssh_timeout": "20m",
       "ssh_username": "{{user `ssh_name`}}",
 
-      "shutdown_command": "echo {{ user `ssh_pass` }} | sudo -S shutdown -P now",
+      "shutdown_command": "shutdown -P now",
 
       "vboxmanage": [
         ["modifyvm", "{{.Name}}", "--vram", "{{user `vram`}}"],
