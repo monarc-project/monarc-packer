@@ -51,12 +51,6 @@ echo "--- Updating packages list… ---"
 sudo apt-get update
 sudo apt-get -y upgrade
 
-echo "--- Installing php7.4 ---"
-sudo apt -y install software-properties-common
-sudo add-apt-repository ppa:ondrej/php
-sudo apt-get update
-sudo apt -y install php7.4
-
 echo "--- Install base packages… ---"
 sudo apt-get -y install vim zip unzip git gettext curl  > /dev/null
 
@@ -94,8 +88,12 @@ EOF
 sudo apt-get purge -y expect > /dev/null 2>&1
 
 
+sudo apt -y install software-properties-common
+sudo add-apt-repository ppa:ondrej/php
+sudo apt-get update
+
 echo "--- Installing PHP-specific packages… ---"
-sudo apt-get -y install php apache2 libapache2-mod-php php-curl php-gd php-mysql php-pear php-apcu php-xml php-mbstring php-intl php-imagick php-zip php-xdebug php-bcmath > /dev/null
+sudo apt-get -y install php7.4 apache2 libapache2-mod-php php7.4-curl php7.4-gd php7.4-mysql php-apcu php-xml php7.4-mbstring php7.4-intl php-imagick php7.4-zip php7.4-bcmath > /dev/null
 
 
 php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
