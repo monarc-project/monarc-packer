@@ -36,7 +36,7 @@ post_max_size=200M
 max_execution_time=200
 max_input_time=223
 memory_limit=1024M
-PHP_INI=/etc/php/7.2/apache2/php.ini
+PHP_INI=/etc/php/7.4/apache2/php.ini
 
 export DEBIAN_FRONTEND=noninteractive
 export LANGUAGE=en_US.UTF-8
@@ -51,6 +51,11 @@ echo "--- Updating packages list… ---"
 sudo apt-get update
 sudo apt-get -y upgrade
 
+echo "--- Installing php7.4 ---"
+sudo apt -y install software-properties-common
+sudo add-apt-repository ppa:ondrej/php
+sudo apt-get update
+sudo apt -y install php7.4
 
 echo "--- Install base packages… ---"
 sudo apt-get -y install vim zip unzip git gettext curl  > /dev/null
@@ -365,8 +370,8 @@ return [
     'mospApiUrl' => 'https://objects.monarc.lu/api/',
 
     'monarc' => [
-        'ttl' => 60, // timeout
-        'salt' => '', // private salt for password encryption
+        'ttl' => 60,
+        'salt' => '',
     ],
 
     'statsApi' => [
