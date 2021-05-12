@@ -414,7 +414,7 @@ EOF"
 
 
 echo "--- Post configurations… ---"
-echo -e "Welcome to the MONARC VM.\nMy IP address is: \4\n" | sudo tee /etc/issue
+echo "My IP address is: \4" | sudo tee /etc/issue
 
 
 
