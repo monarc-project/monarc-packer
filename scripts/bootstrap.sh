@@ -208,14 +208,13 @@ sudo chown -R monarc:monarc /home/monarc/.pyenv
 sudo chmod -R 777 /home/monarc/.pyenv # prevents 'pyenv: cannot rehash: /home/monarc/.pyenv/shims isn't writable'
 
 export PATH="/home/monarc/.pyenv/bin:$PATH"
-eval "$(pyenv init -)"
+eval "$(pyenv init --path)"
 eval "$(pyenv virtualenv-init -)"
 
-sudo -u monarc echo 'export PATH="/home/monarc/.pyenv/bin:$PATH"' >> /home/monarc/.bashrc
-sudo -u monarc echo 'eval "$(pyenv init -)"' >> /home/monarc/.bashrc
-sudo -u monarc echo 'eval "$(pyenv virtualenv-init -)"' >> /home/monarc/.bashrc
-sudo -u monarc bash -c 'source /home/monarc/.bashrc'
-bash -c 'source /home/monarc/.bashrc'
+sudo -u monarc echo 'export PYENV_ROOT="/home/monarc/.pyenv"' >> /home/monarc/.profile
+sudo -u monarc echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> /home/monarc/.profile
+sudo -u monarc echo 'eval "$(pyenv init --path)"' >> /home/monarc/.profile
+sudo -u monarc bash -c 'source /home/monarc/.profile'
 pyenv install $PYTHON_VERSION
 pyenv global $PYTHON_VERSION
 
@@ -229,7 +228,6 @@ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poet
 python get-poetry.py
 sudo chown -R monarc:monarc /home/monarc/.poetry
 rm get-poetry.py
-sudo chmod -R 777 /home/monarc/.pyenv # prevents 'pyenv: cannot rehash: /home/monarc/.pyenv/shims isn't writable'
 export FLASK_APP=runserver.py
 export PATH="$PATH:$HOME/.poetry/bin"
 export STATS_CONFIG=production.py
