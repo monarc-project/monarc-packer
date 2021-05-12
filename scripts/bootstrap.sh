@@ -414,7 +414,15 @@ EOF"
 
 
 echo "--- Post configurations… ---"
-echo "My IP address is: \4" | sudo tee /etc/issue
+sudo bash -c "cat << EOF > /etc/issue
+Welcome to the MONARC Virtual Machine!
+
+MONARC Web interface is available at: http://\4
+
+
+EOF"
+
+
 
 
 
