@@ -419,6 +419,11 @@ Welcome to the MONARC Virtual Machine!
 
 MONARC Web interface is available at: http://\4
 
+Stats Service is available at: http://\4:$STATS_PORT
+
+If you find any bugs:
+https://github.com/monarc-project/MonarcAppFO/issues
+
 
 EOF"
 
