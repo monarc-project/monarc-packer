@@ -229,6 +229,7 @@ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poet
 python get-poetry.py
 sudo chown -R monarc:monarc /home/monarc/.poetry
 rm get-poetry.py
+sudo chmod -R 777 /home/monarc/.pyenv # prevents 'pyenv: cannot rehash: /home/monarc/.pyenv/shims isn't writable'
 export FLASK_APP=runserver.py
 export PATH="$PATH:$HOME/.poetry/bin"
 export STATS_CONFIG=production.py
