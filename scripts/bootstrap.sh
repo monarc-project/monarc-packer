@@ -88,6 +88,7 @@ EOF
 sudo apt-get purge -y expect > /dev/null 2>&1
 
 
+echo "--- Installing PHP-specific packages… ---"
 sudo apt -y install software-properties-common
 sudo add-apt-repository ppa:ondrej/php
 sudo apt-get update
