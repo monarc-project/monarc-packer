@@ -61,7 +61,16 @@
           "{{.Name}}",
           "--cpus",
           "{{user `cpus`}}"
-        ]
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--natpf1",
+          "dashboard,tcp,,5005,0.0.0.0,5005"
+        ],
+        [ "modifyvm", "{{.Name}}", "--audio", "none" ],
+        [ "modifyvm", "{{.Name}}", "--graphicscontroller", "vmsvga" ],
+        [ "modifyvm", "{{.Name}}", "--vrde", "off" ]
       ],
       "vm_name": "{{user `vm_name`}}_{{user `vm_version`}}_{{user `latest_commit`}}"
     }
