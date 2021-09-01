@@ -188,10 +188,14 @@ EOF"
 
 
 echo "--- Installation Node, NPM and Grunt… ---"
+cd ~
 curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
 sudo apt-get install -y nodejs
 sudo npm install -g grunt-cli
 sudo npm install -g node-gyp
+sudo chown -R 1000:1000 "/home/monarc/.npm"
+cd $PATH_TO_MONARC
+#sudo -u monarc npm install grunt --no-save
 
 
 echo -e "\n--- Installing the stats service… ---\n"
