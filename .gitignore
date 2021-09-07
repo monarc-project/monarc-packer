@@ -1,3 +1,6 @@
 packer_cache/
 output-virtualbox-iso/
 *.checksum
+*.tar.gz
+SHA1SUMS
+SHA512SUMS

@@ -14,30 +14,34 @@ wget -q -O /tmp/LICENSE-MONARC https://raw.githubusercontent.com/monarc-project/
 # Enable logging for packer
 PACKER_LOG=1
 
-# Clean files from the previous build
-rm -Rf output-virtualbox-iso/  2> /dev/null
-rm *.checksum  2> /dev/null
-
 # Launch the generation of the virtual machine
 echo "Generating a virtual machine for MONARC $MONARC_VERSION (commit id: $LATEST_COMMIT)…"
 packer build monarc.json
 
 TIME_END=$(date +%s)
 TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
-echo "The generation took ${TIME_DELTA} seconds"
+echo "The generation took ${TIME_DELTA} seconds."
 
-echo "Generation of the release bundle…"
-mv packer_virtualbox-iso_virtualbox-iso_sha1.checksum SHA1SUMS
-mv packer_virtualbox-iso_virtualbox-iso_sha512.checksum SHA512SUMS
+echo "Generation of the release bundle (.tar.gz file)…"
+TIME_START=$(date +%s)
+bundle=MONARC_$MONARC_VERSION@${LATEST_COMMIT:0:7}
+mkdir $bundle
+mv packer_virtualbox-iso_virtualbox-iso_sha1.checksum $bundle/SHA1SUMS
+mv packer_virtualbox-iso_virtualbox-iso_sha512.checksum $bundle/SHA512SUMS
+mv output-virtualbox-iso/MONARC_$MONARC_VERSION@$LATEST_COMMIT.ova $bundle
+tar -czvf MONARC_$MONARC_VERSION@$LATEST_COMMIT.tar.gz $bundle
+TIME_END=$(date +%s)
+TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
+echo "The generation took ${TIME_DELTA} seconds."
 
-tar -czvf MONARC_$MONARC_VERSION@$LATEST_COMMIT.tar.gz SHA1SUMS SHA512SUMS output-virtualbox-iso/MONARC_$MONARC_VERSION@$LATEST_COMMIT.ova 
-echo "Bundle generated."
+# Cleaning…
+rm -Rf $bundle output-virtualbox-iso/ 2> /dev/null
 
-# Upload the generated virtual machine
-# read -r -p "Do you want to upload the generated virtual machine on GitHub? [y/N] " response
+# Upload the generated bundle
+# read -r -p "Do you want to upload the generated bundle? [y/N] " response
 # case "$response" in
 #     [yY][eE][sS]|[yY])
-#         ./upload.sh github_api_token=$GITHUB_AUTH_TOKEN owner=monarc-project repo=MonarcAppFO tag=$MONARC_VERSION filename=output-virtualbox-iso/MONARC_$MONARC_VERSION_$LATEST_COMMIT.ova
+#         scp MONARC_$MONARC_VERSION@$LATEST_COMMIT.tar.gz vm.monarc.lu
 #         ;;
 #     *)
 #         :
