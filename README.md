@@ -4,13 +4,14 @@
 
 * [VirtualBox](https://www.virtualbox.org);
 * [Packer](https://www.packer.io) from the Packer website;
-* [jq](https://github.com/stedolan/jq).
+* [jq](https://github.com/stedolan/jq);
+* [tar](https://savannah.gnu.org/projects/tar).
 
 ## Usage
 
     $ ./build_vm.sh
-    Retrieving information about latest MONARC release...
-    Generating a virtual machine for MONARC v2.7.2 (commit id: 99e80ba03cfba2e270473b42b4fb53dec1d2b8b0)...
+    Retrieving information about latest MONARC release…
+    Generating a virtual machine for MONARC v2.11.0-p1 (commit id: 89dc30523dd10bd01f12320b36f3762a50582c23)…
     The generation took 773 seconds.
     Generation of the release bundle…
     The generation took 61 seconds.
@@ -18,8 +19,8 @@
     Do you want to upload the generated bundle? [y/N] n
     Good bye.
 
-A VirtualBox image will be generated and stored in the folder
-*output-virtualbox-iso*. You can directly import it in VirtualBox.
+A VirtualBox image will be generated and bundled in a tar.gz file with other
+assets.
 
 Default credentials (Web interface, SSH and MariaDB) are displayed at the end
 of the process.
