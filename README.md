@@ -12,7 +12,8 @@
     Retrieving information about latest MONARC release...
     Generating a virtual machine for MONARC v2.7.2 (commit id: 99e80ba03cfba2e270473b42b4fb53dec1d2b8b0)...
     The generation took 522 seconds
-    Do you want to upload the generated virtual machine on GitHub? [y/N] n
+    Generation of the release bundle…
+    Bundle generated.
     Good bye.
 
 A VirtualBox image will be generated and stored in the folder
@@ -21,9 +22,3 @@ A VirtualBox image will be generated and stored in the folder
 Default credentials (Web interface, SSH and MariaDB) are displayed at the end
 of the process.
 
-The sha1 and sha512 checksums of the generated VM will be stored in the files
-*packer_virtualbox-iso_virtualbox-iso_sha1.checksum* and
-*packer_virtualbox-iso_virtualbox-iso_sha512.checksum* respectively.
-
-The variable *GITHUB_AUTH_TOKEN* is required if you want to upload the
-generated virtual machine on GitHub.

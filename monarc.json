@@ -72,7 +72,7 @@
         [ "modifyvm", "{{.Name}}", "--graphicscontroller", "vmsvga" ],
         [ "modifyvm", "{{.Name}}", "--vrde", "off" ]
       ],
-      "vm_name": "{{user `vm_name`}}_{{user `vm_version`}}_{{user `latest_commit`}}"
+      "vm_name": "{{user `vm_name`}}_{{user `vm_version`}}@{{user `latest_commit`}}"
     }
   ],
   "post-processors": [
