@@ -29,6 +29,25 @@ mkdir $bundle
 mv packer_virtualbox-iso_virtualbox-iso_sha1.checksum $bundle/SHA1SUMS
 mv packer_virtualbox-iso_virtualbox-iso_sha512.checksum $bundle/SHA512SUMS
 mv output-virtualbox-iso/MONARC_$MONARC_VERSION@$LATEST_COMMIT.ova $bundle
+cat > $bundle/README <<EOF
+# Login and Password for MONARC App (format: username:password)
+
+ MONARC application: admin@admin.localhost:admin
+
+# Login and Password for VirtualBox demo image (format: username:password)
+
+SSH login (Ubuntu credentials): monarc:password
+
+# Database:
+
+- Mysql root login: root:a7daab4243ed998c7e61dc6e4aa48f64dda354021778379ec11e75430534693e
+- Mysql MONARC login: sqlmonarcuser:8c125ed24f4cf1fe50ec8ac4450c81c98b65475677956242bb9385e97fa4027d
+
+
+MONARC is available on port 80.
+
+MONARC Stats Service is available on port 5005.
+EOF
 tar -czvf MONARC_$MONARC_VERSION@$LATEST_COMMIT.tar.gz $bundle
 TIME_END=$(date +%s)
 TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})

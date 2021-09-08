@@ -11,9 +11,9 @@ DBHOST='localhost'
 DBNAME_COMMON='monarc_common'
 DBNAME_CLI='monarc_cli'
 DBUSER_ADMIN='root'
-DBPASSWORD_ADMIN="$(openssl rand -hex 32)"
+DBPASSWORD_ADMIN="a7daab4243ed998c7e61dc6e4aa48f64dda354021778379ec11e75430534693e"
 DBUSER_MONARC='sqlmonarcuser'
-DBPASSWORD_MONARC="$(openssl rand -hex 32)"
+DBPASSWORD_MONARC="8c125ed24f4cf1fe50ec8ac4450c81c98b65475677956242bb9385e97fa4027d"
 
 
 # Stats service
