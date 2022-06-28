@@ -1,8 +1,8 @@
 #! /usr/bin/env bash
 
 # Variables
-MonarcAppFO_Git_Repo='https://github.com/monarc-project/MonarcAppFO.git'
 PATH_TO_MONARC='/var/lib/monarc/fo'
+PATH_TO_MONARC_DATA='/var/lib/monarc/fo-data'
 
 ENVIRONMENT='production'
 
@@ -17,7 +17,7 @@ DBPASSWORD_MONARC="8c125ed24f4cf1fe50ec8ac4450c81c98b65475677956242bb9385e97fa40
 
 
 # Stats service
-PYTHON_VERSION='3.9.5'
+PYTHON_VERSION='3.10.5'
 STATS_PATH='/home/monarc/stats-service'
 STATS_HOST='0.0.0.0'
 STATS_PORT='5005'
@@ -42,20 +42,27 @@ export DEBIAN_FRONTEND=noninteractive
 export LANGUAGE=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-locale-gen en_US.UTF-8
-dpkg-reconfigure locales
+# locale-gen en_US.UTF-8
+# dpkg-reconfigure locales
 
-echo "--- Installing MONARC FO… ---"
 
-echo "--- Updating packages list… ---"
+# set -e
+
+
+echo -e "--- Installing MONARC FO… ---"
+
+echo -e "--- Updating packages list… ---"
 sudo apt-get update
 sudo apt-get -y upgrade
 
-echo "--- Install base packages… ---"
-sudo apt-get -y install vim zip unzip git gettext curl  > /dev/null
+echo -e "--- Install base packages… ---"
+sudo apt-get -y install vim zip unzip git gettext curl jq  > /dev/null
+
+MONARC_VERSION=$(curl --silent -H 'Content-Type: application/json' https://api.github.com/repos/monarc-project/MonarcAppFO/releases/latest | jq  -r '.tag_name')
+MONARCFO_RELEASE_URL="https://github.com/monarc-project/MonarcAppFO/releases/download/$MONARC_VERSION/MonarcAppFO-$MONARC_VERSION.tar.gz"
 
 
-echo "--- Install MariaDB specific packages and settings… ---"
+echo -e "--- Install MariaDB specific packages and settings… ---"
 # echo "mysql-server mysql-server/root_password password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
 # echo "mysql-server mysql-server/root_password_again password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
 sudo apt-get -y install mariadb-server > /dev/null
@@ -88,82 +95,57 @@ EOF
 sudo apt-get purge -y expect > /dev/null 2>&1
 
 
-echo "--- Installing PHP-specific packages… ---"
+echo -e "--- Installing PHP-specific packages… ---"
 sudo apt -y install software-properties-common
 sudo add-apt-repository ppa:ondrej/php
 sudo apt-get update
 
-echo "--- Installing PHP-specific packages… ---"
+echo -e "--- Installing PHP-specific packages… ---"
 sudo apt-get -y install php7.4 apache2 libapache2-mod-php7.4 php7.4-curl php7.4-gd php7.4-mysql php7.4-apcu php7.4-xml php7.4-mbstring php7.4-intl php7.4-imagick php7.4-zip php7.4-bcmath > /dev/null
 sudo apt-get -y remove php8.0-cli
 
-php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-php -r "if (hash_file('sha384', 'composer-setup.php') === '55ce33d7678c5a611085589f1f3ddf8b3c52d662cd01d4ba75c0ee0459970c2200a51f492d557530c71c15d8dba01eae') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-php composer-setup.php --install-dir=/usr/bin --filename=composer
-php -r "unlink('composer-setup.php');"
-mv /tmp/composer /usr/local/bin/composer
 
-
-echo "--- Configuring PHP ---"
+echo -e "--- Configuring PHP ---"
 for key in upload_max_filesize post_max_size max_execution_time max_input_time memory_limit
 do
  sudo sed -i "s/^\($key\).*/\1 = $(eval echo \${$key})/" $PHP_INI
 done
 
 
-echo "--- Enabling mod-rewrite and ssl… ---"
+echo -e "--- Enabling mod-rewrite and ssl… ---"
 sudo a2enmod rewrite > /dev/null
 sudo a2enmod ssl > /dev/null
 sudo a2enmod headers > /dev/null
 
 
-echo "--- Allowing Apache override to all ---"
+echo -e "--- Allowing Apache override to all ---"
 sudo sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
 
 
-echo "--- Setting up our MySQL user for MONARC… ---"
+echo -e "--- Setting up our MySQL user for MONARC… ---"
 sudo mysql -u root -p$DBPASSWORD_ADMIN -e "CREATE USER '$DBUSER_MONARC'@'localhost' IDENTIFIED BY '$DBPASSWORD_MONARC';"
 sudo mysql -u root -p$DBPASSWORD_ADMIN -e "GRANT ALL PRIVILEGES ON * . * TO '$DBUSER_MONARC'@'localhost';"
 sudo mysql -u root -p$DBPASSWORD_ADMIN -e "FLUSH PRIVILEGES;"
 
 
-echo "--- Retrieving MONARC… ---"
-sudo mkdir -p $PATH_TO_MONARC
-sudo chown monarc:monarc $PATH_TO_MONARC
-sudo -u monarc git clone --config core.filemode=false $MonarcAppFO_Git_Repo $PATH_TO_MONARC
-if [ $? -ne 0 ]; then
-    echo "ERROR: unable to clone the MOMARC repository"
-    exit 1;
-fi
-cd $PATH_TO_MONARC
+echo -e "--- Retrieving and installing MONARC… ---"
+sudo mkdir -p /var/lib/monarc/releases/
+# Download release
+sudo curl -sL $MONARCFO_RELEASE_URL -o /var/lib/monarc/releases/`basename $MONARCFO_RELEASE_URL`
+# Create release directory
+sudo mkdir /var/lib/monarc/releases/`basename $MONARCFO_RELEASE_URL | sed 's/.tar.gz//'`
+# Unarchive release
+sudo tar -xzf /var/lib/monarc/releases/`basename $MONARCFO_RELEASE_URL` -C /var/lib/monarc/releases/`basename $MONARCFO_RELEASE_URL | sed 's/.tar.gz//'`
+# Create release symlink
+sudo ln -s /var/lib/monarc/releases/`basename $MONARCFO_RELEASE_URL | sed 's/.tar.gz//'` $PATH_TO_MONARC
+# Create data and caches directories
+sudo mkdir -p $PATH_TO_MONARC_DATA/cache $PATH_TO_MONARC_DATA/DoctrineORMModule/Proxy $PATH_TO_MONARC_DATA/LazyServices/Proxy
+# Create data directory symlink
+sudo ln -s $PATH_TO_MONARC_DATA $PATH_TO_MONARC/data
+sudo chown -R www-data:www-data /var/lib/monarc/
 
 
-echo "--- Installing MONARC core modules… ---"
-sudo -u monarc composer install -o --no-dev
-
-# Modules
-sudo -u monarc mkdir -p module/Monarc
-cd module/Monarc
-sudo -u monarc ln -s ./../../vendor/monarc/core Core
-sudo -u monarc ln -s ./../../vendor/monarc/frontoffice FrontOffice
-
-# Interfaces
-cd $PATH_TO_MONARC
-sudo -u monarc mkdir node_modules
-cd node_modules
-sudo -u monarc git clone --config core.filemode=false https://github.com/monarc-project/ng-client.git ng_client > /dev/null
-if [ $? -ne 0 ]; then
-    echo "ERROR: unable to clone the ng-client repository"
-    exit 1;
-fi
-sudo -u monarc git clone --config core.filemode=false https://github.com/monarc-project/ng-anr.git ng_anr > /dev/null
-if [ $? -ne 0 ]; then
-    echo "ERROR: unable to clone the ng-anr repository"
-    exit 1;
-fi
-
-
-echo "--- Add a VirtualHost for MONARC… ---"
+echo -e "--- Add a VirtualHost for MONARC… ---"
 sudo bash -c "cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
 <VirtualHost *:80>
     ServerName localhost
@@ -185,17 +167,6 @@ sudo bash -c "cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
     SetEnv APPLICATION_ENV $ENVIRONMENT
 </VirtualHost>
 EOF"
-
-
-echo "--- Installation Node, NPM and Grunt… ---"
-cd ~
-curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
-sudo apt-get install -y nodejs
-sudo npm install -g grunt-cli
-sudo npm install -g node-gyp
-sudo chown -R 1000:1000 "/home/monarc/.npm"
-cd $PATH_TO_MONARC
-#sudo -u monarc npm install grunt --no-save
 
 
 echo -e "\n--- Installing the stats service… ---\n"
@@ -229,10 +200,8 @@ sudo -u postgres psql -c "ALTER USER $STATS_DB_USER WITH SUPERUSER;"
 
 
 cd ~
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -o get-poetry.py
-python get-poetry.py
+curl -sSL https://install.python-poetry.org | python -
 sudo chown -R monarc:monarc /home/monarc/.poetry
-rm get-poetry.py
 export FLASK_APP=runserver.py
 export PATH="$PATH:$HOME/.poetry/bin"
 export STATS_CONFIG=production.py
@@ -248,7 +217,7 @@ sudo chown monarc:monarc $STATS_PATH
 git clone https://github.com/monarc-project/stats-service $STATS_PATH
 sudo chown -R monarc:monarc $STATS_PATH
 cd $STATS_PATH
-sudo -u monarc npm ci
+# sudo -u monarc npm ci
 poetry install --no-dev
 
 sudo -u monarc cat > $STATS_PATH/instance/production.py <<EOF
@@ -260,6 +229,8 @@ INSTANCE_URL = 'http://127.0.0.1:$STATS_PORT'
 
 ADMIN_EMAIL = 'info@cases.lu'
 ADMIN_URL = 'https://www.cases.lu'
+
+ACTIVE_BLUEPRINTS = ['stats_bp', 'admin_bp', 'root_bp', 'map_bp']
 
 REMOTE_STATS_SERVER = 'https://dashboard.monarc.lu'
 
@@ -326,14 +297,12 @@ sudo systemctl restart statsservice > /dev/null
 
 # Create a new client and set the apiKey.
 cd $STATS_PATH ; apiKey=$(poetry run flask client_create --name admin_localhost | sed -nr 's/Token: (.*)$/\1/p')
-cd $PATH_TO_MONARC
 
 
-echo "--- Configuration of MONARC data base connection… ---"
+echo -e "--- Configuration of MONARC data base connection… ---"
 cd $PATH_TO_MONARC
-sudo -u monarc cat > config/autoload/local.php <<EOF
+sudo -u www-data bash -c "cat << EOF > config/autoload/local.php
 <?php
-\$package_json = json_decode(file_get_contents('./package.json'), true);
 
 return [
     'doctrine' => [
@@ -359,10 +328,12 @@ return [
 
     'activeLanguages' => array('fr','en','de','nl','es','it','ja','pl','pt','ru','zh'),
 
-    'appVersion' => \$package_json['version'],
+    'appVersion' => '$MONARC_VERSION',
 
     'checkVersion' => false,
     'appCheckingURL' => 'https://version.monarc.lu/check/MONARC',
+    
+    'instanceName' => 'MONARC (VirtualBox VM)', // will be used for the label of the 2FA QRCode.
 
     'email' => [
         'name' => 'MONARC',
@@ -381,13 +352,7 @@ return [
         'apiKey' => '$apiKey',
     ],
 ];
-EOF
-
-sudo mkdir -p $PATH_TO_MONARC/data/cache
-sudo mkdir -p $PATH_TO_MONARC/data/LazyServices/Proxy
-sudo mkdir -p $PATH_TO_MONARC/data/DoctrineORMModule/Proxy
-sudo chown -R www-data data
-sudo chmod -R 777 data
+EOF"
 
 
 echo "--- Creation of the data bases… ---"
@@ -396,28 +361,27 @@ mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC -e "CREATE DATABASE monarc_common D
 echo "--- Populating MONARC DB… ---"
 sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc_structure.sql > /dev/null
 sudo -u monarc mysql -u $DBUSER_MONARC -p$DBPASSWORD_MONARC monarc_common < db-bootstrap/monarc_data.sql > /dev/null
+echo -e "--- Migrating MONARC DB… ---"
+sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx migrate -c module/Monarc/FrontOffice/migrations/phinx.php
+sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx migrate -c module/Monarc/Core/migrations/phinx.php
 
 
-echo "--- Update the project… ---"
-sudo -u monarc ./scripts/update-all.sh
-
-
-echo "--- Create initial user and client ---"
+echo -e "--- Create initial user and client… ---"
 sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx seed:run -c ./module/Monarc/FrontOffice/migrations/phinx.php
 
 
-echo "--- Restarting Apache… ---"
+echo -e "--- Restarting Apache… ---"
 sudo systemctl restart apache2.service > /dev/null
 
 
-echo "--- Create a collect-stats run every day. ---"
+echo -e "--- Create a collect-stats run every day. ---"
 sudo bash -c "cat > /etc/cron.daily/collect-stats <<EOF
 #!/bin/sh
 cd /var/lib/monarc/fo/ ; php bin/console monarc:collect-stats
 EOF"
 
 
-echo "--- Post configurations… ---"
+echo -e "--- Post configurations… ---"
 sudo bash -c "cat << EOF > /etc/issue
 Welcome to the MONARC Virtual Machine!
 
@@ -438,11 +402,11 @@ EOF"
 TIME_END=$(date +%s)
 TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
 
-echo "--- MONARC is ready! ---"
-echo "Login and passwords for the MONARC image are the following:"
-echo "MONARC application: admin@admin.localhost:admin"
-echo "SSH login: monarc:password"
-echo "Mysql root login: $DBUSER_ADMIN:$DBPASSWORD_ADMIN"
-echo "Mysql MONARC login: $DBUSER_MONARC:$DBPASSWORD_MONARC"
+echo -e "--- MONARC is ready! ---"
+echo -e "Login and passwords for the MONARC image are the following:"
+echo -e "MONARC application: admin@admin.localhost:admin"
+echo -e "SSH login: monarc:password"
+echo -e "Mysql root login: $DBUSER_ADMIN:$DBPASSWORD_ADMIN"
+echo -e "Mysql MONARC login: $DBUSER_MONARC:$DBPASSWORD_MONARC"
 
-echo "The generation took ${TIME_DELTA} seconds"
+echo -e "The generation took ${TIME_DELTA} seconds"
