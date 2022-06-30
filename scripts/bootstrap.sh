@@ -17,14 +17,9 @@ DBPASSWORD_MONARC="8c125ed24f4cf1fe50ec8ac4450c81c98b65475677956242bb9385e97fa40
 
 
 # Stats service
-PYTHON_VERSION='3.10.5'
 STATS_PATH='/home/monarc/stats-service'
-STATS_HOST='0.0.0.0'
-STATS_PORT='5005'
-STATS_DB_NAME='statsservice'
-STATS_DB_USER='sqlmonarcuser'
-STATS_DB_PASSWORD="sqlmonarcuser"
-STATS_SECRET_KEY="$(openssl rand -hex 32)"
+STATS_PORT='5000'
+STATS_SECRET_KEY="c3ff95aa569afa36f5395317fb77dc300507fe3c"
 
 
 # Timing creation
@@ -145,160 +140,6 @@ sudo ln -s $PATH_TO_MONARC_DATA $PATH_TO_MONARC/data
 sudo chown -R www-data:www-data /var/lib/monarc/
 
 
-echo -e "--- Add a VirtualHost for MONARC… ---"
-sudo bash -c "cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
-<VirtualHost *:80>
-    ServerName localhost
-    DocumentRoot $PATH_TO_MONARC/public
-
-    <Directory $PATH_TO_MONARC/public>
-        DirectoryIndex index.php
-        AllowOverride All
-        Require all granted
-    </Directory>
-
-    <IfModule mod_headers.c>
-       Header always set X-Content-Type-Options nosniff
-       Header always set X-XSS-Protection '1; mode=block'
-       Header always set X-Robots-Tag none
-       Header always set X-Frame-Options SAMEORIGIN
-    </IfModule>
-
-    SetEnv APPLICATION_ENV $ENVIRONMENT
-</VirtualHost>
-EOF"
-
-
-echo -e "\n--- Installing the stats service… ---\n"
-# see up-to-date processe here:
-# https://github.com/monarc-project/stats-service/blob/master/contrib/install.sh
-
-sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
-libreadline-dev libsqlite3-dev wget llvm libncurses5-dev libncursesw5-dev \
-xz-utils tk-dev libffi-dev liblzma-dev python-openssl python3-distutils
-
-
-# install a newer version of Python
-curl https://pyenv.run | bash
-sudo chown -R monarc:monarc /home/monarc/.pyenv
-sudo chmod -R 777 /home/monarc/.pyenv # prevents 'pyenv: cannot rehash: /home/monarc/.pyenv/shims isn't writable'
-
-export PATH="/home/monarc/.pyenv/bin:$PATH"
-eval "$(pyenv init --path)"
-eval "$(pyenv virtualenv-init -)"
-
-sudo -u monarc echo 'export PYENV_ROOT="/home/monarc/.pyenv"' >> /home/monarc/.profile
-sudo -u monarc echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> /home/monarc/.profile
-sudo -u monarc echo 'eval "$(pyenv init --path)"' >> /home/monarc/.profile
-sudo -u monarc bash -c 'source /home/monarc/.profile'
-pyenv install $PYTHON_VERSION
-pyenv global $PYTHON_VERSION
-
-sudo apt-get -y install postgresql
-sudo -u postgres psql -c "CREATE USER $STATS_DB_USER WITH PASSWORD '$STATS_DB_PASSWORD';"
-sudo -u postgres psql -c "ALTER USER $STATS_DB_USER WITH SUPERUSER;"
-
-
-cd ~
-curl -sSL https://install.python-poetry.org | python -
-sudo chown -R monarc:monarc /home/monarc/.poetry
-export FLASK_APP=runserver.py
-export PATH="$PATH:$HOME/.poetry/bin"
-export STATS_CONFIG=production.py
-echo 'export PATH="$PATH:$HOME/.poetry/bin"' >> ~/.bashrc
-echo 'export FLASK_APP=runserver.py' >> ~/.bashrc
-echo 'export STATS_CONFIG=production.py' >> ~/.bashrc
-bash -c 'source /home/monarc/.bashrc'
-bash -c 'source $HOME/.poetry/env'
-
-
-sudo mkdir -p $STATS_PATH
-sudo chown monarc:monarc $STATS_PATH
-git clone https://github.com/monarc-project/stats-service $STATS_PATH
-sudo chown -R monarc:monarc $STATS_PATH
-cd $STATS_PATH
-# sudo -u monarc npm ci
-poetry install --no-dev
-
-sudo -u monarc cat > $STATS_PATH/instance/production.py <<EOF
-HOST = '$STATS_HOST'
-PORT = $STATS_PORT
-DEBUG = False
-TESTING = False
-INSTANCE_URL = 'http://127.0.0.1:$STATS_PORT'
-
-ADMIN_EMAIL = 'info@cases.lu'
-ADMIN_URL = 'https://www.cases.lu'
-
-ACTIVE_BLUEPRINTS = ['stats_bp', 'admin_bp', 'root_bp', 'map_bp']
-
-REMOTE_STATS_SERVER = 'https://dashboard.monarc.lu'
-
-DB_CONFIG_DICT = {
-    'user': '$STATS_DB_USER',
-    'password': '$STATS_DB_PASSWORD',
-    'host': 'localhost',
-    'port': 5432,
-}
-DATABASE_NAME = '$STATS_DB_NAME'
-SQLALCHEMY_DATABASE_URI = 'postgresql://{user}:{password}@{host}:{port}/{name}'.format(
-    name=DATABASE_NAME, **DB_CONFIG_DICT
-)
-SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-SECRET_KEY = '$STATS_SECRET_KEY'
-
-LOG_PATH = './var/stats.log'
-
-MOSP_URL = 'https://objects.monarc.lu'
-EOF
-
-mkdir var
-touch var/stats.log
-sudo chown monarc:monarc var/stats.log
-sudo chmod 777 var/stats.log
-
-export FLASK_APP=runserver.py
-export STATS_CONFIG=production.py
-
-FLASK_APP=runserver.py poetry run flask db_create
-FLASK_APP=runserver.py poetry run flask db_init
-FLASK_APP=runserver.py poetry run flask client_create --name ADMIN --role admin
-
-
-sudo bash -c "cat << EOF > /etc/systemd/system/statsservice.service
-[Unit]
-Description=MONARC Stats service
-After=network.target
-
-[Service]
-User=monarc
-Environment=LANG=en_US.UTF-8
-Environment=LC_ALL=en_US.UTF-8
-Environment=FLASK_APP=runserver.py
-Environment=FLASK_ENV=production
-Environment=STATS_CONFIG=production.py
-Environment=FLASK_RUN_HOST=$STATS_HOST
-Environment=FLASK_RUN_PORT=$STATS_PORT
-WorkingDirectory=$STATS_PATH
-ExecStart=/home/monarc/.pyenv/shims/python /home/monarc/.poetry/bin/poetry run flask run
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF"
-
-sudo systemctl daemon-reload > /dev/null
-sleep 1
-sudo systemctl enable statsservice.service > /dev/null
-sleep 3
-sudo systemctl restart statsservice > /dev/null
-#systemctl status statsservice.service
-
-# Create a new client and set the apiKey.
-cd $STATS_PATH ; apiKey=$(poetry run flask client_create --name admin_localhost | sed -nr 's/Token: (.*)$/\1/p')
-
-
 echo -e "--- Configuration of MONARC data base connection… ---"
 cd $PATH_TO_MONARC
 sudo -u www-data bash -c "cat << EOF > config/autoload/local.php
@@ -349,7 +190,7 @@ return [
 
     'statsApi' => [
         'baseUrl' => 'http://127.0.0.1:$STATS_PORT',
-        'apiKey' => '$apiKey',
+        'apiKey' => '$STATS_SECRET_KEY',
     ],
 ];
 EOF"
@@ -366,12 +207,69 @@ sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx migrate -c module/Monarc
 sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx migrate -c module/Monarc/Core/migrations/phinx.php
 
 
-echo -e "--- Create initial user and client… ---"
+echo -e "--- Create initial user… ---"
 sudo -u www-data php ./vendor/robmorgan/phinx/bin/phinx seed:run -c ./module/Monarc/FrontOffice/migrations/phinx.php
+
+
+echo -e "--- Add a VirtualHost for MONARC… ---"
+sudo bash -c "cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
+<VirtualHost *:80>
+    ServerName localhost
+    DocumentRoot $PATH_TO_MONARC/public
+
+    <Directory $PATH_TO_MONARC/public>
+        DirectoryIndex index.php
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    <IfModule mod_headers.c>
+       Header always set X-Content-Type-Options nosniff
+       Header always set X-XSS-Protection '1; mode=block'
+       Header always set X-Robots-Tag none
+       Header always set X-Frame-Options SAMEORIGIN
+    </IfModule>
+
+    SetEnv APPLICATION_ENV $ENVIRONMENT
+</VirtualHost>
+EOF"
 
 
 echo -e "--- Restarting Apache… ---"
 sudo systemctl restart apache2.service > /dev/null
+
+
+echo -e "\n--- Installing the stats service… ---\n"
+sudo apt-get -y install docker docker-compose
+git clone https://github.com/monarc-project/stats-service $STATS_PATH
+cd $STATS_PATH
+docker-compose up -d
+
+
+sudo bash -c "cat << EOF > /etc/systemd/system/statsservice.service
+[Unit]
+Description=MONARC Stats service
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=$STATS_PATH
+ExecStart=/usr/bin/docker-compose up -d
+ExecStop=/usr/bin/docker-compose down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
+EOF"
+
+sudo systemctl daemon-reload > /dev/null
+sleep 1
+sudo systemctl enable statsservice.service > /dev/null
+sleep 1
+sudo systemctl restart statsservice > /dev/null
+#systemctl status statsservice.service
 
 
 echo -e "--- Create a collect-stats run every day. ---"
@@ -387,16 +285,13 @@ Welcome to the MONARC Virtual Machine!
 
 MONARC Web interface is available at: http://\4
 
-Stats Service is available at: http://\4:$STATS_PORT
+Stats Service is available at: http://\4:$STATS_PORT/api/v1/swagger.json
 
 If you find any bugs:
 https://github.com/monarc-project/MonarcAppFO/issues
 
 
 EOF"
-
-
-
 
 
 TIME_END=$(date +%s)
