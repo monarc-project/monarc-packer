@@ -16,7 +16,7 @@ PACKER_LOG=1
 
 # Launch the generation of the virtual machine
 echo "Generating a virtual machine for MONARC $MONARC_VERSION (commit id: $LATEST_COMMIT)…"
-./packer build monarc.json
+packer build monarc.json
 
 TIME_END=$(date +%s)
 TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
