@@ -145,6 +145,8 @@ cd $PATH_TO_MONARC
 sudo -u www-data bash -c "cat << EOF > config/autoload/local.php
 <?php
 
+\$packageJson = json_decode(file_get_contents('./package.json'), true);
+
 return [
     'doctrine' => [
         'connection' => [
@@ -169,11 +171,10 @@ return [
 
     'activeLanguages' => array('fr','en','de','nl','es','it','ja','pl','pt','ru','zh'),
 
-    'appVersion' => '$MONARC_VERSION',
-
+    'appVersion' => \$packageJson['version'],
     'checkVersion' => false,
     'appCheckingURL' => 'https://version.monarc.lu/check/MONARC',
-    
+
     'instanceName' => 'MONARC (VirtualBox VM)', // will be used for the label of the 2FA QRCode.
 
     'email' => [
