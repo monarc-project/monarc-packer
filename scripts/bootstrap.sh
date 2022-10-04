@@ -55,7 +55,7 @@ sudo apt-get -y install vim zip unzip git gettext curl jq  > /dev/null
 
 MONARC_VERSION=$(curl --silent -H 'Content-Type: application/json' https://api.github.com/repos/monarc-project/MonarcAppFO/releases/latest | jq  -r '.tag_name')
 MONARCFO_RELEASE_URL="https://github.com/monarc-project/MonarcAppFO/releases/download/$MONARC_VERSION/MonarcAppFO-$MONARC_VERSION.tar.gz"
-
+MONARC_VERSION_NUMERIC=$(echo $MONARC_VERSION | sed -E "s/^v?([0-9\.]+).*$/\1/")
 
 echo -e "--- Install MariaDB specific packages and settings… ---"
 # echo "mysql-server mysql-server/root_password password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
@@ -144,9 +144,6 @@ echo -e "--- Configuration of MONARC data base connection… ---"
 cd $PATH_TO_MONARC
 sudo -u www-data bash -c "cat << EOF > config/autoload/local.php
 <?php
-
-\$packageJson = json_decode(file_get_contents('./package.json'), true);
-
 return [
     'doctrine' => [
         'connection' => [
@@ -171,7 +168,8 @@ return [
 
     'activeLanguages' => array('fr','en','de','nl','es','it','ja','pl','pt','ru','zh'),
 
-    'appVersion' => \$packageJson['version'],
+    'appVersion' => '$MONARC_VERSION_NUMERIC',
+
     'checkVersion' => false,
     'appCheckingURL' => 'https://version.monarc.lu/check/MONARC',
 
