@@ -174,6 +174,7 @@ return [
     'appCheckingURL' => 'https://version.monarc.lu/check/MONARC',
 
     'instanceName' => 'MONARC (VirtualBox VM)', // will be used for the label of the 2FA QRCode.
+    'twoFactorAuthEnforced' => false,
 
     'email' => [
         'name' => 'MONARC',
