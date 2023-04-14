@@ -1,96 +1,79 @@
 {
   "builders": [
     {
+      "CPUs": 4,
       "boot_command": [
-        "{{ user `boot_command_prefix` }}",
-        "/install/vmlinuz<wait> noapic ",
-        "initrd=/install/initrd.gz ",
-        "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
-        "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
-        "hostname={{ user `hostname` }} ",
-        "grub-installer/bootdev=/dev/sda<wait> ",
-        "fb=false debconf/frontend=noninteractive ",
-        "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
-        "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
-        "passwd/user-fullname={{ user `ssh_fullname` }} ",
-        "passwd/user-password={{ user `ssh_password` }} ",
-        "passwd/user-password-again={{ user `ssh_password` }} ",
-        "passwd/username={{ user `ssh_username` }} ",
-        "-- <enter>"
+        "c<wait>",
+        "linux /casper/vmlinuz --- autoinstall ds=\"nocloud-net;seedfrom=http://{{.HTTPIP}}:{{.HTTPPort}}/\"",
+        "<enter><wait>",
+        "initrd /casper/initrd",
+        "<enter><wait>",
+        "boot",
+        "<enter>"
       ],
+      "boot_wait": "10s",
       "disk_size": "{{user `disk_size`}}",
       "export_opts": [
         "--manifest",
-        "--vsys",
-        "0",
-        "--eulafile",
-        "/tmp/LICENSE-MONARC",
-        "--description",
-        "{{user `vm_description`}}",
-        "--version",
-        "{{user `vm_version`}}"
+        "--vsys", "0",
+        "--eulafile", "/tmp/LICENSE-MONARC",
+        "--description", "{{user `vm_description`}}",
+        "--version", "{{user `vm_version`}}"
       ],
       "format": "ova",
-      "guest_os_type": "Ubuntu_64",
+      "guest_os_type": "ubuntu64Guest",
       "http_directory": "preseeds",
       "http_port_max": 9011,
       "http_port_min": 9001,
-      "iso_checksum": "sha256:f5cbb8104348f0097a8e513b10173a07dbc6684595e331cb06f93f385d0aecf6",
-      "iso_url": "https://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.6-server-amd64.iso",
-      "shutdown_command": "echo {{user `ssh_pass`}} | sudo -S shutdown -P now",
+      "iso_checksum": "sha256:12eed04214d8492d22686b72610711882ddf6222b4dc029c24515a85c4874e95",
+      "iso_url": "https://cdimage.ubuntu.com/ubuntu/releases/jammy/release/ubuntu-22.04.2-live-server-arm64.iso",
+      "shutdown_command": "sudo shutdown -P now",
       "ssh_password": "{{user `ssh_pass`}}",
       "ssh_pty": "true",
       "ssh_timeout": "20m",
       "ssh_username": "{{user `ssh_name`}}",
+      "ssh_handshake_attempts": "100",
       "type": "virtualbox-iso",
       "vboxmanage": [
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--vram",
-          "{{user `vram`}}"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--memory",
-          "{{user `memory`}}"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--cpus",
-          "{{user `cpus`}}"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--natpf1",
-          "dashboard,tcp,,5000,0.0.0.0,5000"
-        ],
-        [ "modifyvm", "{{.Name}}", "--audio", "none" ],
-        [ "modifyvm", "{{.Name}}", "--graphicscontroller", "vmsvga" ],
-        [ "modifyvm", "{{.Name}}", "--vrde", "off" ]
+        ["modifyvm", "{{.Name}}", "--vram", "{{user `vram`}}"],
+        ["modifyvm", "{{.Name}}", "--memory", "{{user `memory`}}"],
+        ["modifyvm", "{{.Name}}", "--cpus", "{{user `cpus`}}"],
+        ["modifyvm", "{{.Name}}", "--natpf1", "dashboard,tcp,,5000,0.0.0.0,5000"],
+        ["modifyvm", "{{.Name}}", "--audio-driver", "none"],
+        ["modifyvm", "{{.Name}}", "--usb", "off"],
+        ["modifyvm", "{{.Name}}", "--graphicscontroller", "vmsvga"],
+        ["modifyvm", "{{.Name}}", "--vrde", "off"]
       ],
       "vm_name": "{{user `vm_name`}}_{{user `vm_version`}}@{{user `latest_commit`}}"
     }
   ],
   "post-processors": [
     {
-      "checksum_types": [
-        "sha1",
-        "sha512"
-      ],
+      "checksum_types": ["sha1", "sha512"],
       "type": "checksum"
     }
   ],
   "provisioners": [
     {
-      "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
-      "inline": [
-        "echo '%sudo    ALL=(ALL)  NOPASSWD:ALL' >> /etc/sudoers"
+      "type": "shell",
+      "inline": ["systemctl stop ssh"]
+    },
+    {
+      "environment_vars": [
+        "DESKTOP={{user `desktop`}}",
+        "UPDATE={{user `update`}}",
+        "http_proxy={{user `http_proxy`}}",
+        "https_proxy={{user `https_proxy`}}",
+        "no_proxy={{user `no_proxy`}}"
       ],
+      "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
+      "inline": ["echo '%sudo    ALL=(ALL)  NOPASSWD:ALL' >> /etc/sudoers"],
       "type": "shell"
+    },
+    {
+      "type": "shell",
+      "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
+      "script": "scripts/interfaces.sh"
     },
     {
       "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
@@ -101,8 +84,8 @@
   ],
   "variables": {
     "boot_command_prefix": "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
-    "cpus": "2",
-    "disk_size": "50000",
+    "cpus": "4",
+    "disk_size": "100000",
     "hostname": "monarc",
     "latest_commit": "{{env `LATEST_COMMIT`}}",
     "memory": "4096",

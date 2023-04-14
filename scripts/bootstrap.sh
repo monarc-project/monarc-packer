@@ -31,14 +31,17 @@ post_max_size=200M
 max_execution_time=200
 max_input_time=223
 memory_limit=1024M
-PHP_INI=/etc/php/7.4/apache2/php.ini
+
+PHP_INI=/etc/php/8.1/apache2/php.ini
+
+MARIA_DB_CFG=/etc/mysql/mariadb.conf.d/50-server.cnf
 
 export DEBIAN_FRONTEND=noninteractive
 export LANGUAGE=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-# locale-gen en_US.UTF-8
-# dpkg-reconfigure locales
+sudo -E locale-gen en_US.UTF-8
+sudo -E dpkg-reconfigure locales
 
 
 # set -e
@@ -47,11 +50,10 @@ export LC_ALL=en_US.UTF-8
 echo -e "--- Installing MONARC FO… ---"
 
 echo -e "--- Updating packages list… ---"
-sudo apt-get update
-sudo apt-get -y upgrade
+sudo apt-get update && sudo apt-get upgrade -y
 
 echo -e "--- Install base packages… ---"
-sudo apt-get -y install vim zip unzip git gettext curl jq  > /dev/null
+sudo apt-get -y install vim zip unzip git gettext curl gsfonts jq > /dev/null
 
 MONARC_VERSION=$(curl --silent -H 'Content-Type: application/json' https://api.github.com/repos/monarc-project/MonarcAppFO/releases/latest | jq  -r '.tag_name')
 MONARCFO_RELEASE_URL="https://github.com/monarc-project/MonarcAppFO/releases/download/$MONARC_VERSION/MonarcAppFO-$MONARC_VERSION.tar.gz"
@@ -60,7 +62,8 @@ MONARC_VERSION_NUMERIC=$(echo $MONARC_VERSION | sed -E "s/^v?([0-9\.]+).*$/\1/")
 echo -e "--- Install MariaDB specific packages and settings… ---"
 # echo "mysql-server mysql-server/root_password password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
 # echo "mysql-server mysql-server/root_password_again password $DBPASSWORD_ADMIN" | sudo debconf-set-selections
-sudo apt-get -y install mariadb-server > /dev/null
+sudo apt -y install mariadb-server mariadb-client > /dev/null
+
 # Secure the MariaDB installation (especially by setting a strong root password)
 sudo systemctl restart mariadb.service > /dev/null
 sleep 5
@@ -89,15 +92,16 @@ expect eof
 EOF
 sudo apt-get purge -y expect > /dev/null 2>&1
 
+echo -e "\n--- Configuring… ---\n"
+sudo sed -i "s/skip-external-locking/#skip-external-locking/g" $MARIA_DB_CFG
+sudo sed -i "s/.*bind-address.*/bind-address = 0.0.0.0/" $MARIA_DB_CFG
+sudo sed -i "s/.*character-set-server.*/character-set-server = utf8mb4/" $MARIA_DB_CFG
+sudo sed -i "s/.*collation-server.*/collation-server = utf8mb4_general_ci/" $MARIA_DB_CFG
+
 
 echo -e "--- Installing PHP-specific packages… ---"
-sudo apt -y install software-properties-common
-sudo add-apt-repository ppa:ondrej/php
-sudo apt-get update
+sudo apt-get install -y php8.1 php8.1-cli php8.1-common php8.1-mysql php8.1-zip php8.1-gd php8.1-mbstring php8.1-curl php8.1-xml php8.1-bcmath php8.1-intl php8.1-imagic > /dev/null
 
-echo -e "--- Installing PHP-specific packages… ---"
-sudo apt-get -y install php7.4 apache2 libapache2-mod-php7.4 php7.4-curl php7.4-gd php7.4-mysql php7.4-xml php7.4-mbstring php7.4-intl php7.4-imagick php7.4-zip php7.4-bcmath > /dev/null
-sudo apt-get -y remove php8.0-cli
 
 
 echo -e "--- Configuring PHP ---"
@@ -105,6 +109,10 @@ for key in upload_max_filesize post_max_size max_execution_time max_input_time m
 do
  sudo sed -i "s/^\($key\).*/\1 = $(eval echo \${$key})/" $PHP_INI
 done
+# session expires in 1 week:
+sudo sed -i "s/^\(session\.gc_maxlifetime\).*/\1 = $(eval echo 604800)/" $PHP_INI
+sudo sed -i "s/^\(session\.gc_probability\).*/\1 = $(eval echo 1)/" $PHP_INI
+sudo sed -i "s/^\(session\.gc_divisor\).*/\1 = $(eval echo 1000)/" $PHP_INI
 
 
 echo -e "--- Enabling mod-rewrite and ssl… ---"
@@ -134,7 +142,7 @@ sudo tar -xzf /var/lib/monarc/releases/`basename $MONARCFO_RELEASE_URL` -C /var/
 # Create release symlink
 sudo ln -s /var/lib/monarc/releases/`basename $MONARCFO_RELEASE_URL | sed 's/.tar.gz//'` $PATH_TO_MONARC
 # Create data and caches directories
-sudo mkdir -p $PATH_TO_MONARC_DATA/cache $PATH_TO_MONARC_DATA/DoctrineORMModule/Proxy $PATH_TO_MONARC_DATA/LazyServices/Proxy
+sudo mkdir -p $PATH_TO_MONARC_DATA/cache $PATH_TO_MONARC_DATA/DoctrineORMModule/Proxy $PATH_TO_MONARC_DATA/LazyServices/Proxy $PATH_TO_MONARC_DATA/data/import/files
 # Create data directory symlink
 sudo ln -s $PATH_TO_MONARC_DATA $PATH_TO_MONARC/data
 sudo chown -R www-data:www-data /var/lib/monarc/
@@ -144,6 +152,13 @@ echo -e "--- Configuration of MONARC data base connection… ---"
 cd $PATH_TO_MONARC
 sudo -u www-data bash -c "cat << EOF > config/autoload/local.php
 <?php
+\$appdir = getenv('APP_DIR') ? getenv('APP_DIR') : '$PATH_TO_MONARC';
+\$string = file_get_contents(\$appdir.'/package.json');
+if(\$string === FALSE) {
+    \$string = file_get_contents('./package.json');
+}
+\$package_json = json_decode(\$string, true);
+
 return [
     'doctrine' => [
         'connection' => [
@@ -166,7 +181,7 @@ return [
         ],
     ],
 
-    'activeLanguages' => array('fr','en','de','nl','es','it','ja','pl','pt','ru','zh'),
+    'activeLanguages' => ['fr','en','de','nl','es','it','ja','pl','pt','ru','zh'],
 
     'appVersion' => '$MONARC_VERSION_NUMERIC',
 
@@ -191,6 +206,11 @@ return [
     'statsApi' => [
         'baseUrl' => 'http://127.0.0.1:$STATS_PORT',
         'apiKey' => '$STATS_SECRET_KEY',
+    ],
+
+    'import' => [
+        'uploadFolder' => '$appdir/data/import/files',
+        'isBackgroundProcessActive' => false,
     ],
 ];
 EOF"
