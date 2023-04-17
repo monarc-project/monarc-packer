@@ -14,7 +14,7 @@ wget -q -O /tmp/LICENSE-MONARC https://raw.githubusercontent.com/monarc-project/
 
 # Enable logging for packer, launch the generation of the virtual machine
 echo "Generating a virtual machine for MONARC $MONARC_VERSION (commit id: $LATEST_COMMIT)…"
-PACKER_LOG=1 packer build -only=virtualbox-iso monarc.json
+PACKER_LOG=1 packer build monarc.json
 
 TIME_END=$(date +%s)
 TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
