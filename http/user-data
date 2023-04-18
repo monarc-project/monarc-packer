@@ -29,8 +29,8 @@ autoinstall:
           name: lvm
   identity:
       hostname: monarc
-      password: "password"
       username: monarc
+      password: "password"
   ssh:
       install-server: yes
       authorized-keys: []
@@ -42,13 +42,6 @@ autoinstall:
       - curl
       - sudo
       - openssh-server
-      - linux-cloud-tools-virtual
-  output:
-    init: "> /var/log/cloud-init.log"
-    config: [ ">> /tmp/foo.out", "> /var/log/cloud-config.log" ]
-    final:
-      output: "| tee /tmp/final.stdout | tee /var/log/cloud-final.log"
-      error: "&1"
   final_message: "System installation complete."
   write_files:
     - encoding: b64
@@ -57,18 +50,20 @@ autoinstall:
       path: /etc/systemd/network/eth0.network
       permissions: '0644'
   early-commands:
-    - systemctl stop ssh
+    - sudo systemctl stop ssh
+    - sudo ufw allow ssh
+    # - mkdir -p ~/.ssh && echo "AAAAB3NzaC1yc2EAAAADAQABAAABAQC/Lz0Rp6Tdx1p7x1/N3fpu46ctdHns+8i+/MpAO99Siv9JOzEP4uVuJH81iofuffXbs6TYgbztgJWgOmhdyq6E/xLtMVORK3WfYkDfPPS7oYebcQF4SGTKCNR6Q0fdqbKf6QQKrJzia5xlNWm7ghQVJRAjk1AaHkQmHDjrMh59ADXdoiQhhWLhiCYQCl1pY8K/PFd3bS1zKvyLYXjSt+FQ5xgCvf8/JNTraXOSxtff6IcBawCmHTGvjwcPbQElTo8ytAFWQjTCCF2teqUz99cw3kRZhrCLY5N+qTGQFKL9HjeNm7O5yAU0+PCYW5txKoUmLowWxateGTGxO9JwMr03" >> ~/.ssh/authorized_keys
     - sed -i "s/#Cache=.*/Cache=yes/g" /etc/systemd/resolved.conf
     - sed -i "s/#DNS=.*/DNS=4.2.2.1 4.2.2.2 208.67.220.220/g" /etc/systemd/resolved.conf
     - sed -i "s/#FallbackDNS=.*/FallbackDNS=4.2.2.1 4.2.2.2 208.67.220.220/g" /etc/systemd/resolved.conf
-    - systemctl restart systemd-resolved
+    - sudo systemctl restart systemd-resolved
   late-commands:
     - sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"$/GRUB_CMDLINE_LINUX_DEFAULT=="\1 net.ifnames=0 biosdevname=0"/g' /target/etc/default/grub
     - sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=" net.ifnames/GRUB_CMDLINE_LINUX_DEFAULT="net.ifnames/g' /target/etc/default/grub
     - echo "PermitRootLogin yes" >> /target/etc/ssh/sshd_config
-    - sudo chroot /target /bin/bash -c '/usr/sbin/useradd --create-home --shell /bin/bash --password vagrant vagrant'
-    - sudo chroot /target /bin/bash -c 'printf "vagrant\nvagrant\n" | passwd root'
-    - curtin in-target --target=/target -- update-grub
+    - sudo chroot /target /bin/bash -c '/usr/sbin/useradd --create-home --shell /bin/bash --password monarc monarc'
+    - sudo chroot /target /bin/bash -c 'printf "monarc\nmonarc\n" | passwd root'
+    # - curtin in-target --target=/target -- update-grub
 
 # End of life config additions.
 # sources_list: |
