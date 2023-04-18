@@ -11,12 +11,10 @@ export LATEST_COMMIT=$(curl --silent -H 'Content-Type: application/json' -s http
 
 # Fetching latest MONARC LICENSE
 wget -q -O /tmp/LICENSE-MONARC https://raw.githubusercontent.com/monarc-project/MonarcAppFO/master/LICENSE
-# Enable logging for packer
-PACKER_LOG=1
 
 # Launch the generation of the virtual machine
 echo "Generating a virtual machine for MONARC $MONARC_VERSION (commit id: $LATEST_COMMIT)…"
-packer build monarc.json
+PACKER_LOG=1 packer build monarc.json
 
 TIME_END=$(date +%s)
 TIME_DELTA=$(expr ${TIME_END} - ${TIME_START})
