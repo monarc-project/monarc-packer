@@ -97,12 +97,12 @@ sudo apt-get purge -y expect > /dev/null 2>&1
 
 
 echo -e "--- Installing PHP-specific packages… ---"
-sudo apt -y install software-properties-common
+sudo apt update
+sudo apt install lsb-release ca-certificates apt-transport-https software-properties-common -y
 sudo add-apt-repository ppa:ondrej/php
-sudo apt-get update
 
 echo -e "--- Installing PHP-specific packages… ---"
-sudo apt-get install -y php8.0 php8.0-cli php8.0-common php8.0-mysql php8.0-zip php8.0-gd php8.0-mbstring php8.0-curl php8.0-xml php8.0-bcmath php8.0-intl php8.0-imagic > /dev/null
+sudo apt-get install -y php8.1 php8.1-cli php8.1-common php8.1-mysql php8.1-zip php8.1-gd php8.1-mbstring php8.1-curl php8.1-xml php8.1-bcmath php8.1-intl php8.1-imagic > /dev/null
 
 
 echo -e "--- Configuring PHP ---"
