@@ -153,13 +153,6 @@ echo -e "--- Configuration of MONARC data base connection… ---"
 cd $PATH_TO_MONARC
 sudo -u www-data bash -c "cat << EOF > config/autoload/local.php
 <?php
-\$appdir = getenv('APP_DIR') ? getenv('APP_DIR') : '$PATH_TO_MONARC';
-\$string = file_get_contents(\$appdir.'/package.json');
-if(\$string === FALSE) {
-    \$string = file_get_contents('./package.json');
-}
-\$package_json = json_decode(\$string, true);
-
 return [
     'doctrine' => [
         'connection' => [
@@ -210,7 +203,7 @@ return [
     ],
 
     'import' => [
-        'uploadFolder' => '$appdir/data/import/files',
+        'uploadFolder' => '/var/lib/monarc/fo/data/import/files',
         'isBackgroundProcessActive' => false,
     ],
 ];
