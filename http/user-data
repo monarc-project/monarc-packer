@@ -4,66 +4,102 @@ autoinstall:
   version: 1
   locale: en_US.UTF-8
   keyboard:
-      layout: us
-      variant: ""
-      toggle: ""
-  network:
-      network:
-          version: 2
-          ethernets:
-              eth0:
-                 dhcp4: yes
-                 dhcp6: no
-  apt:
-      geoip: false
-      primary:
-          - arches: [default]
-            uri: https://mirrors.edge.kernel.org/ubuntu/
-            # uri: https://old-releases.ubuntu.com/ubuntu/
-      security:
-          - arches: [default]
-            uri: https://mirrors.edge.kernel.org/ubuntu/
-            # uri: https://old-releases.ubuntu.com/ubuntu/
-  storage:
-      layout:
-          name: lvm
-  identity:
-      hostname: monarc
-      username: monarc
-      password: "password"
+    layout: us
+    variant: ""
+    toggle: ""
+  #network:
+  #  version: 2
+  #    ethernets:
+  #      eth0:
+  #        dhcp4: yes
+  #        dhcp6: no
+  #        dhcp-identifier: mac
+  #apt:
+  #  geoip: false
+  #  preserve_sources_list: false
+  #  disable_components: []
+  #  primary:
+  #    - arches: [default]
+  #      uri: https://mirrors.edge.kernel.org/ubuntu/
+  #      # uri: https://old-releases.ubuntu.com/ubuntu/
+  #  security:
+  #    - arches: [default]
+  #      uri: https://mirrors.edge.kernel.org/ubuntu/
+  #      # uri: https://old-releases.ubuntu.com/ubuntu/
+  #storage:
+  #  layout:
+  #    name: lvm
+  #identity:
+  #  hostname: ubuntu-server
+  #  username: ubuntu
+  #  password: "$6$FhcddHFVZ7ABA4Gi$9ME1/XEiFHYx8Qh01w6CPqZZE7EDSf2tOc9Ugs89beYrUMyCyCxXzyBovoRwjN/6ipRnxCKeG/3PmJb1zvMAp/"
+  #manage_etc_hosts: false
   ssh:
-      install-server: yes
-      authorized-keys: []
-      allow-pw: yes
+    install-server: yes
+  #  authorized-keys:
+  #    - "ssh-rsa foo/bar"
+    allow-pw: yes
+    disable_root: false
+  #  ssh_quiet_keygen: true
+    allow_public_ssh_keys: true
   user-data:
-      disable_root: false
+    disable_root: false
+    timezone: UTC
+    users:
+    - default
+    - name: monarc
+      passwd: "password"
+      shell: /bin/bash
+      lock-passwd: false
+      sudo: ALL=(ALL) NOPASSWD:ALL
+      groups: users, admin
+      locale: en_US
+      keyboard:
+        layout: en
+        variant: us
+    chpasswd:
+      expire: false
+      list:
+        - ubuntu:password
   packages:
-      - sed
-      - curl
-      - sudo
-      - openssh-server
+    #- sed
+    #- curl
+    #- sudo
+    #- git
+    #- open-vm-tools
+    - openssh-server
+    #- software-properties-common
+    - sshpass
+    #- wget
+  #package_update: true
+  #package_upgrade: true
+  #package_reboot_if_required: true
   final_message: "System installation complete."
-  write_files:
-    - encoding: b64
-      content: W01hdGNoXQpOYW1lPWV0aDAKCltOZXR3b3JrXQpESENQPWlwdjQK
-      owner: root:root
-      path: /etc/systemd/network/eth0.network
-      permissions: '0644'
+  #write_files:
+  #  - encoding: b64
+  #    content: W01hdGNoXQpOYW1lPWV0aDAKCltOZXR3b3JrXQpESENQPWlwdjQK
+  #    owner: root:root
+  #    path: /etc/systemd/network/eth0.network
+  #    permissions: '0644'
   early-commands:
+    - sudo ufw disable
     - sudo systemctl stop ssh
-    - sudo ufw allow ssh
-    # - mkdir -p ~/.ssh && echo "AAAAB3NzaC1yc2EAAAADAQABAAABAQC/Lz0Rp6Tdx1p7x1/N3fpu46ctdHns+8i+/MpAO99Siv9JOzEP4uVuJH81iofuffXbs6TYgbztgJWgOmhdyq6E/xLtMVORK3WfYkDfPPS7oYebcQF4SGTKCNR6Q0fdqbKf6QQKrJzia5xlNWm7ghQVJRAjk1AaHkQmHDjrMh59ADXdoiQhhWLhiCYQCl1pY8K/PFd3bS1zKvyLYXjSt+FQ5xgCvf8/JNTraXOSxtff6IcBawCmHTGvjwcPbQElTo8ytAFWQjTCCF2teqUz99cw3kRZhrCLY5N+qTGQFKL9HjeNm7O5yAU0+PCYW5txKoUmLowWxateGTGxO9JwMr03" >> ~/.ssh/authorized_keys
+    - sudo touch /etc/cloud/cloud-init.disabled
     - sed -i "s/#Cache=.*/Cache=yes/g" /etc/systemd/resolved.conf
     - sed -i "s/#DNS=.*/DNS=4.2.2.1 4.2.2.2 208.67.220.220/g" /etc/systemd/resolved.conf
     - sed -i "s/#FallbackDNS=.*/FallbackDNS=4.2.2.1 4.2.2.2 208.67.220.220/g" /etc/systemd/resolved.conf
     - sudo systemctl restart systemd-resolved
   late-commands:
+    - sed -i -e 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/g' /target/etc/ssh/sshd_config
+    - echo 'monarc ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/monarc
+    - curtin in-target --target=/target -- chmod 440 /etc/sudoers.d/monarc
     - sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"$/GRUB_CMDLINE_LINUX_DEFAULT=="\1 net.ifnames=0 biosdevname=0"/g' /target/etc/default/grub
     - sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=" net.ifnames/GRUB_CMDLINE_LINUX_DEFAULT="net.ifnames/g' /target/etc/default/grub
     - echo "PermitRootLogin yes" >> /target/etc/ssh/sshd_config
     - sudo chroot /target /bin/bash -c '/usr/sbin/useradd --create-home --shell /bin/bash --password monarc monarc'
     - sudo chroot /target /bin/bash -c 'printf "monarc\nmonarc\n" | passwd root'
-    # - curtin in-target --target=/target -- update-grub
+    - sudo systemctl reload ssh
+
 
 # End of life config additions.
 # sources_list: |

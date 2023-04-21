@@ -21,20 +21,22 @@
         "--version", "{{user `vm_version`}}"
       ],
       "format": "ova",
-      "guest_os_type": "ubuntu64Guest",
+      "guest_os_type": "Ubuntu_64",
       "http_directory": "http",
       "http_port_max": 9011,
       "http_port_min": 9001,
       "iso_checksum": "sha256:5e38b55d57d94ff029719342357325ed3bda38fa80054f9330dc789cd2d43931",
       "iso_url": "https://releases.ubuntu.com/22.04/ubuntu-22.04.2-live-server-amd64.iso",
-      "shutdown_command": "{{user `ssh_name`}} | sudo -S shutdown -P now",
-      "ssh_username": "{{user `ssh_name`}}",
+      "shutdown_command": "monarc | sudo -S shutdown -P now",
       "ssh_password": "{{user `ssh_pass`}}",
+      "ssh_username": "{{user `ssh_name`}}",
+      "ssh_port": 22,
       "ssh_timeout": "30m",
-      "ssh_port": "22",
+      "ssh_certificate_file": "~/.ssh/",
       "ssh_handshake_attempts": "100",
       "type": "virtualbox-iso",
       "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--natpf1", "ssh,tcp,,2222,0.0.0.0,22"],
         ["modifyvm", "{{.Name}}", "--nat-localhostreachable1", "on"],
         ["modifyvm", "{{.Name}}", "--vram", "{{user `vram`}}"],
         ["modifyvm", "{{.Name}}", "--memory", "{{user `memory`}}"],
@@ -56,6 +58,7 @@
   ],
   "provisioners": [
     {
+      "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
       "scripts": [
         "scripts/apt.sh",
         "scripts/floppy.sh",
@@ -77,10 +80,8 @@
   "variables": {
     "cpus": "4",
     "disk_size": "100000",
-    "hostname": "monarc",
     "latest_commit": "{{env `LATEST_COMMIT`}}",
     "memory": "4096",
-    "ssh_fullname": "monarc",
     "ssh_name": "monarc",
     "ssh_pass": "password",
     "vm_description": "MONARC - Method for an Optimised aNAlysis of Risks by CASES.",
