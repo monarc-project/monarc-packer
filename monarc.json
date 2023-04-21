@@ -44,52 +44,28 @@
       "ssh_username": "{{user `ssh_name`}}",
       "type": "virtualbox-iso",
       "vboxmanage": [
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--vram",
-          "{{user `vram`}}"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--memory",
-          "{{user `memory`}}"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--cpus",
-          "{{user `cpus`}}"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--natpf1",
-          "dashboard,tcp,,5000,0.0.0.0,5000"
-        ],
-        [ "modifyvm", "{{.Name}}", "--audio", "none" ],
-        [ "modifyvm", "{{.Name}}", "--graphicscontroller", "vmsvga" ],
-        [ "modifyvm", "{{.Name}}", "--vrde", "off" ]
+        ["modifyvm", "{{.Name}}", "--natpf1", "ssh,tcp,,2222,0.0.0.0,22"],
+        ["modifyvm", "{{.Name}}", "--vram", "{{user `vram`}}"],
+        ["modifyvm", "{{.Name}}", "--memory", "{{user `memory`}}"],
+        ["modifyvm", "{{.Name}}", "--cpus", "{{user `cpus`}}"],
+        ["modifyvm", "{{.Name}}", "--natpf1", "dashboard,tcp,,5000,0.0.0.0,5000"],
+        ["modifyvm", "{{.Name}}", "--audio", "none"],
+        ["modifyvm", "{{.Name}}", "--graphicscontroller", "vmsvga"],
+        ["modifyvm", "{{.Name}}", "--vrde", "off"]
       ],
       "vm_name": "{{user `vm_name`}}_{{user `vm_version`}}@{{user `latest_commit`}}"
     }
   ],
   "post-processors": [
     {
-      "checksum_types": [
-        "sha1",
-        "sha512"
-      ],
+      "checksum_types": ["sha1", "sha512"],
       "type": "checksum"
     }
   ],
   "provisioners": [
     {
       "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
-      "inline": [
-        "echo '%sudo    ALL=(ALL)  NOPASSWD:ALL' >> /etc/sudoers"
-      ],
+      "inline": ["echo '%sudo    ALL=(ALL)  NOPASSWD:ALL' >> /etc/sudoers"],
       "type": "shell"
     },
     {
