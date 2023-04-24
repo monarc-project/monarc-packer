@@ -9,15 +9,13 @@
 
 ## Usage
 
+Execute the shell script:
+
     $ ./build_vm.sh
-    Retrieving information about latest MONARC release…
-    Generating a virtual machine for MONARC v2.11.0-p1 (commit id: 89dc30523dd10bd01f12320b36f3762a50582c23)…
-    The generation took 773 seconds.
-    Generation of the release bundle…
-    The generation took 61 seconds.
-    Bundle generated.
-    Do you want to upload the generated bundle? [y/N] n
-    Good bye.
+
+Caution: The generated encrypted password is created with use of the following command:
+    $ echo 'Password@1234!' | mkpasswd -m sha-512 --stdin
+NOTE: mkpasswd part of whois package in Ubuntu:
 
 A VirtualBox image will be generated and bundled in a tar.gz file with other
 assets.

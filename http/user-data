@@ -7,50 +7,50 @@ autoinstall:
     layout: us
     variant: ""
     toggle: ""
-  #network:
-  #  version: 2
-  #    ethernets:
-  #      eth0:
-  #        dhcp4: yes
-  #        dhcp6: no
-  #        dhcp-identifier: mac
-  #apt:
-  #  geoip: false
-  #  preserve_sources_list: false
-  #  disable_components: []
-  #  primary:
-  #    - arches: [default]
-  #      uri: https://mirrors.edge.kernel.org/ubuntu/
-  #      # uri: https://old-releases.ubuntu.com/ubuntu/
-  #  security:
-  #    - arches: [default]
-  #      uri: https://mirrors.edge.kernel.org/ubuntu/
-  #      # uri: https://old-releases.ubuntu.com/ubuntu/
-  #storage:
-  #  layout:
-  #    name: lvm
+    network:
+      network:
+        version: 2
+        ethernets:
+          ens192:
+            dhcp4: true
+  #manage_etc_hosts: false
+  #write_files:
+  #  - encoding: b64
+  #    content: W01hdGNoXQpOYW1lPWV0aDAKCltOZXR3b3JrXQpESENQPWlwdjQK
+  #    owner: root:root
+  #    path: /etc/systemd/network/eth0.network
+  #    permissions: '0644'
+  storage:
+    layout:
+      name: lvm
+  apt:
+    geoip: true
+    preserve_sources_list: false
+    disable_components: []
+    primary:
+      - arches: [amd64, i386]
+        uri: http://us.archive.ubuntu.com/ubuntu
+      - arches: [default]
+        uri: http://ports.ubuntu.com/ubuntu-ports
   #identity:
   #  hostname: ubuntu-server
-  #  username: ubuntu
-  #  password: "$6$FhcddHFVZ7ABA4Gi$9ME1/XEiFHYx8Qh01w6CPqZZE7EDSf2tOc9Ugs89beYrUMyCyCxXzyBovoRwjN/6ipRnxCKeG/3PmJb1zvMAp/"
-  #manage_etc_hosts: false
+  #  username: monarc
+  #  password: $6$VuqVY2Sp3qcI96WA$4Oh.azByigZQAWVvOMWSupsCNPpWjPMAn9n5ETy8barjNdg7ndUStKSVYWMaqkt5p6VEOKkoG5NrEioPWxBbP.
   ssh:
     install-server: yes
-  #  authorized-keys:
-  #    - "ssh-rsa foo/bar"
     allow-pw: yes
     disable_root: false
-  #  ssh_quiet_keygen: true
-    allow_public_ssh_keys: true
   user-data:
     disable_root: false
     timezone: UTC
     users:
     - default
     - name: monarc
-      passwd: "password"
+      passwd: '$6$VuqVY2Sp3qcI96WA$4Oh.azByigZQAWVvOMWSupsCNPpWjPMAn9n5ETy8barjNdg7ndUStKSVYWMaqkt5p6VEOKkoG5NrEioPWxBbP.'
       shell: /bin/bash
       lock-passwd: false
+      ssh_pwauth: True
+      chpasswd: { expire: False }
       sudo: ALL=(ALL) NOPASSWD:ALL
       groups: users, admin
       locale: en_US
@@ -60,27 +60,26 @@ autoinstall:
     chpasswd:
       expire: false
       list:
-        - ubuntu:password
+        - ubuntu:$6$VuqVY2Sp3qcI96WA$4Oh.azByigZQAWVvOMWSupsCNPpWjPMAn9n5ETy8barjNdg7ndUStKSVYWMaqkt5p6VEOKkoG5NrEioPWxBbP.
   packages:
-    #- sed
-    #- curl
-    #- sudo
-    #- git
-    #- open-vm-tools
     - openssh-server
-    #- software-properties-common
+    - open-vm-tools
+    - cloud-init
+    - whois
+    - zsh
+    - wget
+    - sed
+    - curl
+    - git
+    - sudo
+    - software-properties-common
     - sshpass
-    #- wget
+    - dialog
+    - apt-utils
   #package_update: true
   #package_upgrade: true
   #package_reboot_if_required: true
   final_message: "System installation complete."
-  #write_files:
-  #  - encoding: b64
-  #    content: W01hdGNoXQpOYW1lPWV0aDAKCltOZXR3b3JrXQpESENQPWlwdjQK
-  #    owner: root:root
-  #    path: /etc/systemd/network/eth0.network
-  #    permissions: '0644'
   early-commands:
     - sudo ufw disable
     - sudo systemctl stop ssh
@@ -98,19 +97,4 @@ autoinstall:
     - echo "PermitRootLogin yes" >> /target/etc/ssh/sshd_config
     - sudo chroot /target /bin/bash -c '/usr/sbin/useradd --create-home --shell /bin/bash --password monarc monarc'
     - sudo chroot /target /bin/bash -c 'printf "monarc\nmonarc\n" | passwd root'
-    - sudo systemctl reload ssh
-
-
-# End of life config additions.
-# sources_list: |
-#    deb $MIRROR jammy main restricted
-#    deb $MIRROR jammy-security main restricted
-# conf: |
-#    Acquire::AllowReleaseInfoChange::Suite "true";
-#    Acquire::AllowReleaseInfoChange::Origin "true";
-#    Acquire::AllowReleaseInfoChange::Label "true";
-#    Acquire::AllowReleaseInfoChange::Version "true";
-#    Acquire::AllowReleaseInfoChange::Codename "true";
-
-# End of life early command additions.
-# - printf "\n91.189.91.124 old-releases.ubuntu.com\n" >> /etc/hosts
+    - sudo systemctl start ssh
