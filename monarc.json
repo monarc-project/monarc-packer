@@ -69,7 +69,7 @@
     "latest_commit": "{{env `LATEST_COMMIT`}}",
     "memory": "4096",
     "ssh_user": "monarc",
-    "ssh_pass": "Password@1234!",
+    "ssh_pass": "password",
     "vm_description": "MONARC - Method for an Optimised aNAlysis of Risks by CASES.",
     "vm_name": "MONARC",
     "vm_version": "{{env `MONARC_VERSION`}}",

@@ -7,12 +7,6 @@ autoinstall:
     layout: us
     variant: ""
     toggle: ""
-    network:
-      network:
-        version: 2
-        ethernets:
-          ens192:
-            dhcp4: true
   #manage_etc_hosts: false
   #write_files:
   #  - encoding: b64
@@ -32,10 +26,11 @@ autoinstall:
         uri: http://us.archive.ubuntu.com/ubuntu
       - arches: [default]
         uri: http://ports.ubuntu.com/ubuntu-ports
-  #identity:
-  #  hostname: ubuntu-server
-  #  username: monarc
-  #  password: $6$VuqVY2Sp3qcI96WA$4Oh.azByigZQAWVvOMWSupsCNPpWjPMAn9n5ETy8barjNdg7ndUStKSVYWMaqkt5p6VEOKkoG5NrEioPWxBbP.
+  identity:
+    hostname: ubuntu-server
+    username: ubuntu
+    # hashed "Password@1234!"
+    password: $6$VuqVY2Sp3qcI96WA$4Oh.azByigZQAWVvOMWSupsCNPpWjPMAn9n5ETy8barjNdg7ndUStKSVYWMaqkt5p6VEOKkoG5NrEioPWxBbP.
   ssh:
     install-server: yes
     allow-pw: yes
@@ -43,10 +38,12 @@ autoinstall:
   user-data:
     disable_root: false
     timezone: UTC
+    # Note: if the "identity" section above is enabled, the "users" is ignored.
     users:
     - default
     - name: monarc
-      passwd: '$6$VuqVY2Sp3qcI96WA$4Oh.azByigZQAWVvOMWSupsCNPpWjPMAn9n5ETy8barjNdg7ndUStKSVYWMaqkt5p6VEOKkoG5NrEioPWxBbP.'
+      # hashed "password"
+      password: $6$Oirh8z2F19Zadi9.$bRbyDndJqekRzq/l4tueYtd/e332iaW9fGarMiGupEFNjcVAvD.uLopDE5xC4so4FTGvORGtilR5Cx7oENHu/.
       shell: /bin/bash
       lock-passwd: false
       ssh_pwauth: True
@@ -60,7 +57,10 @@ autoinstall:
     chpasswd:
       expire: false
       list:
+        # hashed "Password@1234!"
         - ubuntu:$6$VuqVY2Sp3qcI96WA$4Oh.azByigZQAWVvOMWSupsCNPpWjPMAn9n5ETy8barjNdg7ndUStKSVYWMaqkt5p6VEOKkoG5NrEioPWxBbP.
+        # hashed "password"
+        - monarc:$6$Oirh8z2F19Zadi9.$bRbyDndJqekRzq/l4tueYtd/e332iaW9fGarMiGupEFNjcVAvD.uLopDE5xC4so4FTGvORGtilR5Cx7oENHu/.
   packages:
     - openssh-server
     - open-vm-tools
@@ -76,6 +76,7 @@ autoinstall:
     - sshpass
     - dialog
     - apt-utils
+    - python3-pip
   #package_update: true
   #package_upgrade: true
   #package_reboot_if_required: true
@@ -84,10 +85,6 @@ autoinstall:
     - sudo ufw disable
     - sudo systemctl stop ssh
     - sudo touch /etc/cloud/cloud-init.disabled
-    - sed -i "s/#Cache=.*/Cache=yes/g" /etc/systemd/resolved.conf
-    - sed -i "s/#DNS=.*/DNS=4.2.2.1 4.2.2.2 208.67.220.220/g" /etc/systemd/resolved.conf
-    - sed -i "s/#FallbackDNS=.*/FallbackDNS=4.2.2.1 4.2.2.2 208.67.220.220/g" /etc/systemd/resolved.conf
-    - sudo systemctl restart systemd-resolved
   late-commands:
     - sed -i -e 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/g' /target/etc/ssh/sshd_config
     - echo 'monarc ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/monarc
