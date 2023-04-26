@@ -63,20 +63,12 @@ autoinstall:
         - monarc:$6$Oirh8z2F19Zadi9.$bRbyDndJqekRzq/l4tueYtd/e332iaW9fGarMiGupEFNjcVAvD.uLopDE5xC4so4FTGvORGtilR5Cx7oENHu/.
   packages:
     - openssh-server
-    - open-vm-tools
     - cloud-init
     - whois
-    - zsh
-    - wget
     - sed
     - curl
     - git
     - sudo
-    - software-properties-common
-    - sshpass
-    - dialog
-    - apt-utils
-    - python3-pip
   #package_update: true
   #package_upgrade: true
   #package_reboot_if_required: true
