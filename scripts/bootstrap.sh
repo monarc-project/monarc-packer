@@ -174,6 +174,27 @@ return [
         ],
     ],
 
+    'languages' => [
+        'fr' => [
+            'index' => 1,
+            'label' => 'Français',
+        ],
+        'en' => [
+            'index' => 2,
+            'label' => 'English',
+        ],
+        'de' => [
+            'index' => 3,
+            'label' => 'Deutsch',
+        ],
+        'nl' => [
+            'index' => 4,
+            'label' => 'Nederlands',
+        ],
+    ],
+
+    'defaultLanguageIndex' => 1,
+
     'activeLanguages' => ['fr','en','de','nl','es','it','ja','pl','pt','ru','zh'],
 
     'appVersion' => '$MONARC_VERSION_NUMERIC',
