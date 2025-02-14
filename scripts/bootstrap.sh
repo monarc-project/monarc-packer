@@ -144,7 +144,7 @@ sudo ln -s /var/lib/monarc/releases/`basename $MONARCFO_RELEASE_URL | sed 's/.ta
 # Create data and caches directories
 sudo mkdir -p $PATH_TO_MONARC_DATA/cache $PATH_TO_MONARC_DATA/DoctrineORMModule/Proxy $PATH_TO_MONARC_DATA/LazyServices/Proxy $PATH_TO_MONARC_DATA/data/import/files
 # Create data directory symlink
-sudo ln -s $PATH_TO_MONARC_DATA $PATH_TO_MONARC/data
+sudo ln -s $PATH_TO_MONARC_DATA/* $PATH_TO_MONARC/data/
 sudo chown -R www-data:www-data /var/lib/monarc/
 
 
@@ -225,6 +225,15 @@ return [
     'import' => [
         'uploadFolder' => '/var/lib/monarc/fo/data/import/files',
         'isBackgroundProcessActive' => false,
+    ],
+
+    'export' => [
+        'defaultWithEval' => true,
+    ],
+
+    'captcha' => [
+        'enabled' => false,
+        'failedLoginAttempts' => 3,
     ],
 ];
 EOF"
